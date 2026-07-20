@@ -17,12 +17,12 @@ This folder contains comprehensive test case files for EPIC-09 (User Productivit
 ## Test Structure
 
 Each file follows a 4-section structure:
-1. **Unit Tests** — 3 suites, 9 test cases
+1. **Unit Tests** — 3 suites, 7–9 test cases
 2. **Integration Tests** — 3 suites, 6 test cases
 3. **Edge Case Validation** — 3 suites, 6 test cases
 4. **Performance Validation** — 3 suites, 6 test cases
 
-**Total**: 189 test cases across all 7 features
+**Total**: 182 test cases across all 7 features
 
 ## TC ID Convention
 
