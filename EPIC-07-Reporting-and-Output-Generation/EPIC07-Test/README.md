@@ -18,12 +18,12 @@ This folder contains comprehensive test case files for EPIC-07 (Reporting & Outp
 ## Test Structure
 
 Each file follows a 4-section structure:
-1. **Unit Tests** — 3 suites, ~12 test cases
+1. **Unit Tests** — 3 suites, 9 test cases
 2. **Integration Tests** — 3 suites, 6 test cases
 3. **Edge Case Validation** — 3 suites, 6 test cases
 4. **Performance Validation** — 3 suites, 6 test cases
 
-**Total**: ~240 test cases across all 8 features
+**Total**: 216 test cases across all 8 features
 
 ## TC ID Convention
 

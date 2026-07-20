@@ -19,12 +19,12 @@ This folder contains comprehensive test case files for EPIC-13 (Admin, Observabi
 ## Test Structure
 
 Each file follows a 4-section structure:
-1. **Unit Tests** — 3 suites, ~12 test cases
+1. **Unit Tests** — 3 suites, 9 test cases
 2. **Integration Tests** — 3 suites, 6 test cases
 3. **Edge Case Validation** — 3 suites, 6 test cases
 4. **Performance Validation** — 3 suites, 6 test cases
 
-**Total**: ~270 test cases across all 9 features
+**Total**: 243 test cases across all 9 features
 
 ## TC ID Convention
 
