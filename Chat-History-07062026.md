@@ -190,3 +190,142 @@ hint: Updates were rejected because the remote contains work that you do not hav
 
 *Document Generated: July 6, 2026*
 *All prompts captured verbatim from session context*
+
+---
+
+# Session Addendum — July 23–24, 2026
+
+## Session focus
+
+- Evaluate GitHub Wiki options for sharing project documentation
+- Build a Wiki proof of concept on Zain's fork
+- Index repository READMEs and reorganize Wiki navigation
+- Populate missing product vision, strategy, and business-requirements documents
+- Correct branch placement and preserve Shamim's upstream repository
+- Assess readiness to begin a product demo
+
+## User prompts
+
+> "shamim wants the readmes in a wiki that the team can access"
+
+> "can you create it before sharing with collaborators?"
+
+> "what are the changes here: [GitHub Wiki setup plan]"
+
+> "i dont have authorization for that do i?"
+
+> "ok but for now i should have proof of concept"
+
+> "are we making this to add using github wiki feature?"
+
+> "so I don't have to go the repo on the github site and add a page under the wiki tab?"
+
+> "but i can create a wiki on my branch?"
+
+> "yes so let's build it on my repo"
+
+> "signed in"
+
+> "does the scope of this wiki cover the READMEs"
+
+> "yes"
+
+> "on github i noticed everything in project-strategy-vision folder besides the md for PRD is blank"
+
+> "do you have the necessary info to populate those adequately?"
+
+> "ok"
+
+> "commit and push"
+
+> "wait this changed shamim's version?"
+
+> "switch to my own branch"
+
+> "and the documents i wanted to populate?"
+
+> "possible to delete those commits from the shamim branch"
+
+> "confirm"
+
+> "in the 'Start Here' section of the wiki, put the repo guide at the top and README index below Setup and Commands"
+
+> "help me explain to shamim what's been done here"
+
+> "everything is pushed so far?"
+
+> "are we ready to build a demo"
+
+> "is chat/prompt history being recorded?"
+
+> "always update it"
+
+Authentication codes, approval metadata, filesystem metadata, and automatically supplied application context are intentionally excluded.
+
+## Work completed
+
+### GitHub Wiki proof of concept
+
+Created and published a built-in GitHub Wiki on:
+
+`https://github.com/codexmerchant/AI-conference-agent/wiki`
+
+Wiki pages created:
+
+- Home
+- Repository Guide
+- Epic Map
+- Setup and Commands
+- README Index
+- Prompts placeholder
+- Custom sidebar
+
+The Wiki acts as a navigation layer. Canonical project content remains in the main repository to avoid duplicated documentation drifting out of sync.
+
+### README coverage
+
+Created a README Index covering every README-named file identified at the time of review. The Home page's Start Here section was reordered as requested:
+
+1. Repository Guide
+2. Epic Map
+3. Setup and Commands
+4. README Index
+5. Prompts
+
+### Product documents
+
+Confirmed that these files had been empty since their initial commit:
+
+- `Product-Strategy-Vision/Vision.md`
+- `Product-Strategy-Vision/Strategy.md`
+- `Product-Strategy-Vision/Business Requirements.md`
+
+Populated all three as stakeholder-review drafts using the existing PRD and epic definitions. Unapproved pricing, ownership, scheduling, integrations, and numerical targets were marked `TBD`.
+
+The documents were committed and pushed to Zain's `main` branch in commit `8692707`.
+
+### Repository safety and branches
+
+- Shamim's `6shamim/AI-conference-agent` repository was not modified.
+- The temporary `review-shamim-main` branch was deleted locally and from Zain's fork after its document changes were safely applied to Zain's `main`.
+- Zain's `main` remained the active branch tracking `origin/main`.
+
+### Demo-readiness assessment
+
+The repository contains extensive product documentation, epics, features, user stories, and test cases, but no executable application implementation. The project is ready to begin a demo build, not yet ready to run a product demo.
+
+Recommended first demo flow:
+
+1. Start Conference Mode
+2. Simulate conversation and image capture
+3. Display a transcript
+4. Extract a contact and topics
+5. Generate a summary and action items
+6. Produce a follow-up draft
+7. Present results in a conference dashboard
+
+## Ongoing documentation rule
+
+For future work in this repository, update this chat-history document after material prompts, decisions, file changes, commits, pushes, or project-status conclusions. Do not record credentials, one-time authentication codes, secrets, or automatically supplied application metadata.
+
+*Addendum updated: July 24, 2026*
