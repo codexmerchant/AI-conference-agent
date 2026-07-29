@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AI Conference Agent first-slice demo" />
+    <title>AI Conference Agent — Conference intelligence</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#" aria-label="AI Conference Agent home">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>AI Conference Agent</span>
+        </a>
+
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <button class="nav-item is-active" data-view="workspace">
+            <span aria-hidden="true">✦</span> Workspace
+          </button>
+          <button class="nav-item" data-view="library">
+            <span aria-hidden="true">◫</span> Conversations
+            <span class="nav-count" id="nav-count">0</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-note">
+          <span class="eyebrow">First slice</span>
+          <strong>Conversation → action</strong>
+          <p>One complete path from captured audio to reviewed follow-up.</p>
+        </div>
+
+        <div class="profile">
+          <span class="avatar">ZM</span>
+          <span><strong>Zain</strong><small>Demo workspace</small></span>
+          <span aria-hidden="true">•••</span>
+        </div>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <div>
+            <span class="eyebrow" id="view-eyebrow">Conference workspace</span>
+            <h1 id="view-title">Turn a conversation into momentum</h1>
+          </div>
+          <div class="top-actions">
+            <span class="system-status"><i></i> Demo services ready</span>
+            <button class="button secondary" id="new-interaction">New interaction</button>
+          </div>
+        </header>
+
+        <section class="workspace view is-visible" id="workspace-view">
+          <section class="capture-card" id="capture-card">
+            <div class="capture-copy">
+              <span class="step-pill">01 · Capture</span>
+              <h2>Start with one meaningful conversation.</h2>
+              <p>Upload a short recording. The demo will turn it into a transcript, contact, topics, summary, actions, and a follow-up draft.</p>
+              <div class="privacy-note"><span aria-hidden="true">◇</span> Uploaded audio is stored locally. The current real workflow sends audio to OpenAI for transcription; analysis runs through local Qwen3 when available.</div>
+            </div>
+
+            <form class="capture-form" id="capture-form">
+              <div class="field-row">
+                <label>Conference<input id="conference-name" value="Human-Centered AI Summit 2026" required /></label>
+                <label>Interaction<input id="session-name" value="Expo floor conversation" required /></label>
+              </div>
+              <label class="drop-zone" id="drop-zone" for="audio-file">
+                <input id="audio-file" type="file" accept="audio/*" />
+                <span class="upload-icon" aria-hidden="true">↑</span>
+                <strong id="file-title">Drop a conversation recording here</strong>
+                <span id="file-detail">MP3, M4A, WAV, or WebM · up to 25 MB</span>
+                <span class="choose-file">Choose audio</span>
+              </label>
+              <audio id="audio-preview" controls hidden></audio>
+              <label class="consent-check" id="consent-row" hidden>
+                <input id="consent-confirmed" type="checkbox" />
+                <span>I have permission to process this recording.</span>
+              </label>
+              <div class="form-actions">
+                <button class="text-button" id="sample-button" type="button">Run clearly labeled sample</button>
+                <button class="button primary" id="process-button" disabled>Transcribe & analyze <span>→</span></button>
+              </div>
+            </form>
+          </section>
+
+          <section class="processing-card" id="processing-card" hidden aria-live="polite">
+            <div class="processing-orbit"><i></i><i></i><i></i><span>✦</span></div>
+            <div>
+              <span class="eyebrow">Building conversation intelligence</span>
+              <h2 id="processing-title">Preparing the audio…</h2>
+              <div class="progress-track"><i id="progress-bar"></i></div>
+              <p id="processing-detail">Checking the recording and creating a secure processing job.</p>
+            </div>
+            <span class="progress-value" id="progress-value">8%</span>
+            <div class="processing-error" id="processing-error" hidden>
+              <strong>Processing stopped</strong>
+              <p id="processing-error-message"></p>
+              <div><button class="button primary" id="retry-processing">Retry</button><button class="button secondary" id="return-to-capture">Back to audio</button></div>
+            </div>
+          </section>
+
+          <section class="results" id="results" hidden>
+            <div class="result-hero">
+              <div>
+                <button class="back-link" id="back-to-capture">← New conversation</button>
+                <div class="result-kicker"><span class="ready-dot"></span> <span id="result-mode">Ready to review</span></div>
+                <h2 id="result-contact-name">Maya Chen</h2>
+                <p id="result-context">Northstar Labs · Human-Centered AI Summit 2026</p>
+              </div>
+              <div class="save-cluster">
+                <span id="save-status">Not saved yet</span>
+                <button class="button primary" id="save-button">Save interaction</button>
+              </div>
+            </div>
+
+            <div class="result-grid">
+              <div class="result-main">
+                <article class="panel summary-panel">
+                  <div class="panel-heading">
+                    <div><span class="step-pill coral">02 · Understand</span><h3>Conversation brief</h3></div>
+                    <span class="confidence">92% confidence</span>
+                  </div>
+                  <label class="sr-only" for="summary">Meeting summary</label>
+                  <textarea class="editable summary-editor" id="summary"></textarea>
+                  <div class="topic-list" id="topics"></div>
+                </article>
+
+                <article class="panel">
+                  <div class="panel-heading">
+                    <div><span class="step-pill violet">03 · Act</span><h3>Next moves</h3></div>
+                    <button class="text-button" id="add-action">+ Add action</button>
+                  </div>
+                  <div class="action-list" id="action-list"></div>
+                </article>
+
+                <article class="panel">
+                  <div class="panel-heading">
+                    <div><span class="step-pill mint">04 · Follow up</span><h3>Draft message</h3></div>
+                    <button class="text-button" id="copy-follow-up">Copy draft</button>
+                  </div>
+                  <label class="sr-only" for="follow-up">Follow-up draft</label>
+                  <textarea class="editable follow-up-editor" id="follow-up"></textarea>
+                  <div class="review-warning">Review before sending. This demo never sends messages automatically.</div>
+                </article>
+
+                <details class="panel transcript-panel">
+                  <summary><span><span class="step-pill neutral">Source</span><strong>Transcript</strong></span><span>View conversation ↘</span></summary>
+                  <label class="sr-only" for="transcript">Transcript</label>
+                  <textarea class="editable transcript-editor" id="transcript"></textarea>
+                </details>
+              </div>
+
+              <aside class="result-aside">
+                <article class="panel contact-card">
+                  <div class="contact-avatar" id="contact-initials">MC</div>
+                  <span class="eyebrow">Extracted contact</span>
+                  <label>Name<input id="contact-name" /></label>
+                  <label>Role<input id="contact-role" /></label>
+                  <label>Company<input id="contact-company" /></label>
+                  <label>Email<input id="contact-email" type="email" /></label>
+                  <div class="source-note"><span>✓</span><p><strong>Human review enabled</strong>Correct anything the demo inferred before saving.</p></div>
+                </article>
+
+                <article class="panel source-card">
+                  <span class="eyebrow">Source</span>
+                  <strong id="source-file-name">conversation.m4a</strong>
+                  <div class="source-meta"><span id="source-duration">02:14</span><span id="source-size">2.7 MB</span></div>
+                  <div class="mini-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                  <audio id="saved-audio" controls hidden></audio>
+                </article>
+              </aside>
+            </div>
+          </section>
+        </section>
+
+        <section class="library view" id="library-view">
+          <div class="library-heading">
+            <div><span class="step-pill">Saved memory</span><h2>Your conversations</h2><p>Reopen a saved interaction and continue reviewing where you left off.</p></div>
+            <button class="button primary" id="library-new">Capture conversation</button>
+          </div>
+          <div class="empty-state" id="empty-library">
+            <span>◎</span><h3>No saved conversations yet</h3><p>Process and save the first interaction to build your conference memory.</p>
+          </div>
+          <div class="conversation-list" id="conversation-list"></div>
+        </section>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
