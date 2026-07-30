@@ -20,7 +20,7 @@ The roadmap is intentionally progressive:
 
 | Slice | User outcome | Primary epics | Status |
 |---|---|---|---|
-| 1. Conversation to Reviewed Action | Turn a consented recording into a reviewed transcript, contact, summary, actions, follow-up draft, and saved interaction | EPIC-02, 03, 04, 07, 14 | Implemented demo; acceptance incomplete |
+| 1. Conversation to Reviewed Action | Turn a consented recording into a reviewed transcript, contact, summary, actions, follow-up draft, and saved interaction | EPIC-02, 03, 04, 07, 14 | Accepted — 94/100; all critical gates pass |
 | 2. Trusted Mobile Conference Capture | Reliably capture approved conference interactions on mobile, recover through interruptions/offline periods, and deliver media for processing | EPIC-01, 02, 10, 11, 13 | Planned |
 | 3. Multi-Speaker Session Intelligence | Understand panels and presentations with speaker-aware transcripts, quotes, insights, slides, and reviewable session summaries | EPIC-02, 03, 05, 07, 14 | Planned |
 | 4. Contacts, Relationships, and Memory | Recognize people and organizations, prevent duplicates, preserve interaction history, and retrieve prior context | EPIC-03, 04, 06, 12, 14 | Planned |
@@ -48,13 +48,13 @@ A user provides a recording they are permitted to process and receives an editab
 
 ### Acceptance boundary
 
-The current demo proves the pipeline but has not passed Slice 1 acceptance. Known failures include commitment attribution, action ownership, unsupported dates, email normalization, follow-up perspective, and overconfident presentation. These must be hardened and regression-tested before the slice is accepted.
+Slice 1 passed acceptance on July 30, 2026. The final controlled run scored 94/100, passed all nine critical gates, and is covered by 27 automated tests plus browser verification. The accepted workflow includes local MLX Whisper transcription, FluidAudio within-recording speaker diarization, evidence-grounded Qwen3 analysis, visible uncertainty, correction, save, and reopen. See the [acceptance record](../demo/SLICE-1-ACCEPTANCE.md) and [validation evidence](../demo/LOCAL-AI-VALIDATION.md).
 
 ### Explicit exclusions
 
 - Native mobile/background recording
 - Production authentication and multi-user isolation
-- Speaker diarization and session-scale analysis
+- Session-scale and open-ended multi-speaker analysis beyond the accepted interaction workflow
 - External sending or synchronization
 - Production cloud persistence
 - Cross-conference memory and coaching

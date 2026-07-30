@@ -3,9 +3,15 @@
 **Evidence date:** July 29, 2026
 
 **Scope:** Slice 1 local audio transcription and conference-conversation analysis
-**Providers:** MLX Whisper `mlx-community/whisper-large-v3-turbo` and Ollama `qwen3`
+**Providers:** MLX Whisper `mlx-community/whisper-large-v3-turbo`, FluidAudio 0.7.12, and Ollama `qwen3`
 
-## Executive result
+## Current result
+
+Slice 1 is accepted. The final FluidAudio-diarized controlled run scored 94/100, passed all nine critical gates, and is supported by 27 automated tests plus browser verification of upload, speaker-labelled review, save, list, and reopen. Human review remains visible for uncertain evidence and exceptional speaker mappings.
+
+The sections below preserve the earlier baselines and failed prompt-only attribution runs because they explain why the accepted diarization and validation architecture was necessary. The final accepted evidence appears under **July 30 final diarized acceptance run**.
+
+## Initial July 29 result
 
 The local pipeline is technically viable and runs end to end without a paid API. On the controlled 2:12 conference fixture, MLX Whisper achieved a 4.11% word error rate and retained the business-critical facts. Qwen3 recovered the main contact and discussion themes, but its structured output exposed grounding, ownership, date, email-normalization, and follow-up-perspective defects.
 

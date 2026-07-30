@@ -794,8 +794,15 @@ After material project requests, decisions, implementation changes, verification
 - Added a testing helper above the capture metadata fields to fill the canonical conference, interaction, participant identity, and interaction date in one click.
 - Kept audio selection and permission confirmation separate so the helper does not bypass the real processing workflow.
 - Marked the control as a demo/testing convenience rather than intended production UI.
+
 - Added a machine-readable expected result for the controlled conference fixture, including explicit user identity, interaction date/timezone, contact, topics, commitments, owners, supported dates, and follow-up perspective.
 - Identified the first product decision required before implementation: how the demo represents the app user's identity when a controlled fixture participant differs from the visible workspace profile. The acceptance standard and identity approach remain pending stakeholder approval.
+
+## 2026-07-30 — Sharing documentation aligned with accepted Slice 1
+
+- Updated the root README, demo README, and vertical slice map to reflect the accepted FluidAudio-diarized Slice 1 rather than the earlier failing baseline.
+- Preserved failed intermediate validation runs as historical research evidence while adding a current accepted-result summary at the top of the validation record.
+- Clarified the distinction between accepted within-recording diarization and still-excluded session-scale multi-speaker analysis.
 
 ### Acceptance scoring approved
 

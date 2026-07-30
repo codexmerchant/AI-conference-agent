@@ -17,9 +17,9 @@ npm run dev
 
 Then open <http://localhost:4173>. Upload a supported recording for the real workflow, or select **Run clearly labeled sample** to explore the review experience without an API call.
 
-Real transcription and structured analysis can run entirely on the Mac through MLX Whisper and Qwen3. OpenAI remains an explicitly configured alternative rather than an automatic paid fallback. The deterministic sample remains available without either provider. See the [demo README](demo/README.md) for setup, data handling, tests, and current boundaries.
+Real transcription, speaker diarization, and structured analysis can run entirely on the Mac through MLX Whisper, FluidAudio, and Qwen3. OpenAI remains an explicitly configured alternative rather than an automatic paid fallback. The deterministic sample remains available without those providers. See the [demo README](demo/README.md) for setup, data handling, tests, and current boundaries.
 
-The controlled local-AI evaluation, including the fictional audio fixture, measured transcription accuracy, and known structured-analysis failures, is documented in the [local AI validation record](demo/LOCAL-AI-VALIDATION.md).
+Slice 1 is accepted at 94/100 with all critical gates passing and 27 automated tests. The controlled local-AI evaluation—including the fictional audio fixture, measured transcription accuracy, failed intermediate approaches, and final diarized result—is documented in the [local AI validation record](demo/LOCAL-AI-VALIDATION.md) and [acceptance record](demo/SLICE-1-ACCEPTANCE.md).
 
 ## Product documentation
 
