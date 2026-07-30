@@ -12,24 +12,35 @@ This runnable demo implements the first vertical slice described in the product 
 
 The demo has two explicit modes:
 
-- **Real uploaded-audio processing:** securely stores the file in the local demo workspace, transcribes it through OpenAI, and generates schema-constrained interaction intelligence with local Qwen3 when available. It falls back to OpenAI analysis when Ollama/Qwen3 is unavailable.
+- **Real uploaded-audio processing:** securely stores the file in the local demo workspace, transcribes it locally with MLX Whisper, and generates schema-constrained interaction intelligence with local Qwen3.
 - **Clearly labeled sample workflow:** returns deterministic Maya Chen sample data and requires no API key.
 
-Qwen3 local analysis is integrated. SenseVoice transcription is the remaining step for a completely free, on-device workflow. Follow the continuously updated [local AI setup guide](LOCAL-AI-SETUP.md) for verified Mac installation and troubleshooting steps.
+MLX Whisper local transcription and Qwen3 local analysis are integrated. Follow the continuously updated [local AI setup guide](LOCAL-AI-SETUP.md) for verified Mac installation and troubleshooting steps.
+
+See the [local AI validation record](LOCAL-AI-VALIDATION.md) for the controlled fictional fixture, measured MLX accuracy, Qwen extraction results, known failures, and reproduction steps.
 
 ## Run
 
-Requires Node.js 20 or newer.
+Requires Node.js 20 or newer on an Apple-silicon Mac. First install the local transcription environment:
+
+```bash
+cd demo
+sh scripts/setup-local-transcription.sh
+```
+
+Start Ollama and ensure `qwen3` is installed, then run the demo:
 
 ```bash
 cd demo
 npm run dev
 ```
 
-For real processing, set an OpenAI project API key in the shell before starting:
+The MLX model downloads automatically on the first real transcription and is reused afterward. No API key is required. OpenAI processing remains available only when explicitly selected:
 
 ```bash
 export OPENAI_API_KEY="your-project-api-key"
+export TRANSCRIPTION_PROVIDER=openai
+export ANALYSIS_PROVIDER=openai
 npm run dev
 ```
 
@@ -52,8 +63,9 @@ Included:
 
 - Audio selection and local preview
 - Real audio upload and local storage
-- OpenAI file transcription
-- Schema-constrained local Qwen3 or OpenAI contact, topic, summary, action-item, and follow-up extraction
+- Local MLX Whisper file transcription
+- Schema-constrained local Qwen3 contact, topic, summary, action-item, and follow-up extraction
+- Explicitly configured OpenAI transcription and analysis alternatives
 - Visible staged processing
 - Consent confirmation before real processing
 - Clear errors and retry controls
@@ -73,8 +85,9 @@ Not yet included:
 
 ## Data and safety boundary
 
-- Until SenseVoice is integrated, real audio is transmitted to OpenAI only after the user confirms permission and starts processing.
-- When Ollama and Qwen3 are available, transcript analysis remains on-device and the Qwen request disables thinking, streaming, and temperature variation while enforcing the interaction JSON schema.
+- With the default provider settings, audio and transcripts remain on-device through MLX Whisper and Qwen3.
+- The Qwen request disables thinking, streaming, and temperature variation while enforcing the interaction JSON schema.
+- OpenAI receives data only when the corresponding provider is explicitly set to `openai`; there is no automatic paid fallback.
 - The Responses API request sets `store: false`.
 - AI-generated information must be reviewed before use.
 - The local demo is single-user and must not be exposed to an untrusted network.

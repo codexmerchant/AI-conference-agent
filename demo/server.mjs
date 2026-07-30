@@ -4,8 +4,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createDemoAnalysis, createRealAnalysis, normalizeInteraction } from "./lib/demo-data.mjs";
 import { MediaStore } from "./lib/media-store.mjs";
+import { getMlxWhisperStatus, transcribeAudioLocally } from "./lib/mlx-whisper-service.mjs";
 import { analyzeTranscript, ProviderError, transcribeAudio } from "./lib/openai-service.mjs";
 import { analyzeTranscriptLocally, getOllamaStatus } from "./lib/ollama-service.mjs";
+import { chooseAnalysisProvider, chooseTranscriptionProvider } from "./lib/provider-routing.mjs";
 import { InteractionStore } from "./lib/store.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -83,12 +85,21 @@ export function createServer() {
       const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
 
       if (url.pathname === "/api/health") {
-        const ollama = await getOllamaStatus();
+        const [ollama, mlxWhisper] = await Promise.all([getOllamaStatus(), getMlxWhisperStatus()]);
+        const transcriptionPreference = process.env.TRANSCRIPTION_PROVIDER || "mlx";
+        const analysisPreference = process.env.ANALYSIS_PROVIDER || "ollama";
+        const openAIConfigured = Boolean(process.env.OPENAI_API_KEY);
+        const transcriptionReady = transcriptionPreference === "mlx" ? mlxWhisper.available : openAIConfigured;
+        const analysisReady = analysisPreference === "ollama" ? ollama.available && ollama.modelReady : openAIConfigured;
         return json(res, 200, {
           status: "ok",
-          realProcessingConfigured: Boolean(process.env.OPENAI_API_KEY),
+          realProcessingConfigured: transcriptionReady && analysisReady,
+          openAIConfigured,
+          transcriptionProvider: transcriptionPreference,
+          analysisProvider: analysisPreference,
+          localTranscriptionReady: mlxWhisper.available,
           localAnalysisReady: ollama.available && ollama.modelReady,
-          transcriptionModel: process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-transcribe",
+          transcriptionModel: transcriptionPreference === "mlx" ? mlxWhisper.model : process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-transcribe",
           cloudAnalysisModel: process.env.OPENAI_TEXT_MODEL || "gpt-5.6-terra",
           localAnalysisModel: ollama.model
         });
@@ -101,13 +112,18 @@ export function createServer() {
 
       if (url.pathname === "/api/process" && req.method === "POST") {
         try {
-          if (!process.env.OPENAI_API_KEY) {
-            throw new ProviderError("Real audio processing is not configured. Start the demo with OPENAI_API_KEY set, or use the sample conversation.", {
-              status: 503,
-              code: "missing_api_key",
-              retryable: false
-            });
-          }
+          const [ollama, mlxWhisper] = await Promise.all([getOllamaStatus(), getMlxWhisperStatus()]);
+          const openAIConfigured = Boolean(process.env.OPENAI_API_KEY);
+          const transcriptionProvider = chooseTranscriptionProvider({
+            preference: process.env.TRANSCRIPTION_PROVIDER || "mlx",
+            localReady: mlxWhisper.available,
+            openAIConfigured
+          });
+          const analysisProvider = chooseAnalysisProvider({
+            preference: process.env.ANALYSIS_PROVIDER || "ollama",
+            localReady: ollama.available && ollama.modelReady,
+            openAIConfigured
+          });
           const form = await multipart(req);
           const audio = form.get("audio");
           if (!(audio instanceof File) || !audio.size) {
@@ -132,16 +148,20 @@ export function createServer() {
             duration: String(form.get("duration") || "—")
           };
           const audioBytes = Buffer.from(await audio.arrayBuffer());
-          const transcript = await transcribeAudio({
-            bytes: audioBytes,
-            fileName: audio.name,
-            mimeType: audio.type,
-            apiKey: process.env.OPENAI_API_KEY,
-            model: process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-transcribe"
-          });
-          const ollama = await getOllamaStatus();
-          const useLocalAnalysis = process.env.ANALYSIS_PROVIDER !== "openai" && ollama.available && ollama.modelReady;
-          const analysis = useLocalAnalysis
+          const transcript = transcriptionProvider === "mlx"
+            ? await transcribeAudioLocally({
+                bytes: audioBytes,
+                fileName: audio.name,
+                model: mlxWhisper.model
+              })
+            : await transcribeAudio({
+                bytes: audioBytes,
+                fileName: audio.name,
+                mimeType: audio.type,
+                apiKey: process.env.OPENAI_API_KEY,
+                model: process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-transcribe"
+              });
+          const analysis = analysisProvider === "ollama"
             ? await analyzeTranscriptLocally({
                 transcript,
                 conferenceName: input.conferenceName,
@@ -162,8 +182,8 @@ export function createServer() {
             analysis,
             media,
             providers: {
-              transcription: "OpenAI file transcription",
-              analysis: useLocalAnalysis ? `Local ${ollama.model} structured analysis` : "OpenAI structured transcript analysis"
+              transcription: transcriptionProvider === "mlx" ? `Local MLX Whisper (${mlxWhisper.model})` : "OpenAI file transcription",
+              analysis: analysisProvider === "ollama" ? `Local ${ollama.model} structured analysis` : "OpenAI structured transcript analysis"
             }
           }));
         } catch (error) {
@@ -236,6 +256,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   });
   server.listen(port, () => {
     console.log(`AI Conference Agent demo running at http://localhost:${port}`);
-    if (!process.env.OPENAI_API_KEY) console.log("Audio transcription is not configured yet. Local Qwen analysis is detected separately; use the sample workflow until transcription is configured.");
+    console.log("Default real-processing pipeline: Local MLX Whisper transcription · Local Qwen3 analysis.");
   });
 }

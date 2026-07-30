@@ -358,12 +358,14 @@ window.addEventListener("beforeunload", (event) => {
 Promise.all([
   loadLibrary(false),
   api("/api/health").then((health) => {
-    if (health.realProcessingConfigured && health.localAnalysisReady) {
-      $(".system-status").lastChild.textContent = ` OpenAI transcription · Local ${health.localAnalysisModel} analysis`;
-    } else if (health.localAnalysisReady) {
-      $(".system-status").lastChild.textContent = ` Local ${health.localAnalysisModel} ready · transcription setup next`;
+    if (health.realProcessingConfigured && health.transcriptionProvider === "mlx" && health.analysisProvider === "ollama") {
+      $(".system-status").lastChild.textContent = ` Fully local · MLX Whisper + ${health.localAnalysisModel}`;
     } else if (health.realProcessingConfigured) {
-      $(".system-status").lastChild.textContent = " OpenAI processing ready";
+      $(".system-status").lastChild.textContent = ` Ready · ${health.transcriptionProvider} transcription + ${health.analysisProvider} analysis`;
+    } else if (health.localAnalysisReady && !health.localTranscriptionReady) {
+      $(".system-status").lastChild.textContent = ` Local ${health.localAnalysisModel} ready · run MLX Whisper setup`;
+    } else if (health.localTranscriptionReady && !health.localAnalysisReady) {
+      $(".system-status").lastChild.textContent = " Local MLX Whisper ready · start Ollama/Qwen3";
     } else {
       $(".system-status").lastChild.textContent = " Sample ready · processing setup needed";
     }

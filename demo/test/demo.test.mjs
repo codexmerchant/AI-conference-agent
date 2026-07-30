@@ -5,8 +5,10 @@ import path from "node:path";
 import test from "node:test";
 import { createDemoAnalysis, normalizeInteraction } from "../lib/demo-data.mjs";
 import { MediaStore } from "../lib/media-store.mjs";
+import { getMlxWhisperStatus, transcribeAudioLocally } from "../lib/mlx-whisper-service.mjs";
 import { analyzeTranscript, ProviderError, transcribeAudio } from "../lib/openai-service.mjs";
 import { analyzeTranscriptLocally, getOllamaStatus } from "../lib/ollama-service.mjs";
+import { chooseAnalysisProvider, chooseTranscriptionProvider } from "../lib/provider-routing.mjs";
 import { InteractionStore } from "../lib/store.mjs";
 
 test("creates every artifact required by the first slice", () => {
@@ -69,6 +71,49 @@ test("reports a missing API key as a non-retryable configuration error", async (
   await assert.rejects(
     () => transcribeAudio({ bytes: Buffer.from("audio"), fileName: "audio.wav" }),
     (error) => error instanceof ProviderError && error.code === "missing_api_key" && error.retryable === false
+  );
+});
+
+test("detects a ready MLX Whisper installation", async () => {
+  const status = await getMlxWhisperStatus({
+    python: "/test/python",
+    execFileImpl: async (file, args) => {
+      assert.equal(file, "/test/python");
+      assert.equal(args.at(-1), "--health");
+      return { stdout: '{"ready": true}', stderr: "" };
+    }
+  });
+  assert.equal(status.available, true);
+  assert.equal(status.model, "mlx-community/whisper-large-v3-turbo");
+});
+
+test("passes actual audio bytes through the local MLX adapter", async () => {
+  const source = Buffer.from("local audio bytes");
+  const transcript = await transcribeAudioLocally({
+    bytes: source,
+    fileName: "meeting.m4a",
+    python: "/test/python",
+    execFileImpl: async (_file, args) => {
+      const inputPath = args[args.indexOf("--input") + 1];
+      const outputPath = args[args.indexOf("--output") + 1];
+      assert.deepEqual(await readFile(inputPath), source);
+      await import("node:fs/promises").then(({ writeFile }) => writeFile(outputPath, JSON.stringify({ text: "Local transcript text" })));
+      return { stdout: "", stderr: "" };
+    }
+  });
+  assert.equal(transcript, "Local transcript text");
+});
+
+test("requires explicit provider configuration and never silently uses OpenAI", () => {
+  assert.equal(chooseTranscriptionProvider({ localReady: true, openAIConfigured: true }), "mlx");
+  assert.equal(chooseAnalysisProvider({ localReady: true, openAIConfigured: true }), "ollama");
+  assert.throws(
+    () => chooseTranscriptionProvider({ localReady: false, openAIConfigured: true }),
+    (error) => error.code === "mlx_whisper_unavailable"
+  );
+  assert.throws(
+    () => chooseAnalysisProvider({ localReady: false, openAIConfigured: true }),
+    (error) => error.code === "ollama_unavailable"
   );
 });
 
