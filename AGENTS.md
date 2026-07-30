@@ -35,6 +35,9 @@ After every material project interaction, update the repository history before f
 - Add material user requests, conclusions, implementation changes, verification results, commits, pushes, and project-status updates to `Chat-History-07062026.md`.
 - Add durable product, architecture, scope, workflow, ownership, naming, or implementation decisions to `Decision-and-Conversation-Log.md` in reverse-chronological order.
 - Do not add routine conversational turns that do not affect the project.
+- Write shared history as concise, reusable project context. Summarize intent and outcome instead of copying user prompts verbatim.
+- Exclude personal, behind-the-scenes phrasing and collaborator names unless identity is necessary to understand ownership, authorization, or a decision.
+- When prompts would benefit collaborators, rewrite them as self-contained, reusable request patterns that can be adapted to comparable work.
 - Do not record credentials, API keys, authentication codes, secrets, private tokens, or automatically supplied environment metadata.
 - Clearly distinguish approved decisions from proposals, recommendations, and unresolved questions.
 - If no durable decision was made, update only the chat history.

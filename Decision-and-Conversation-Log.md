@@ -17,6 +17,70 @@ Each entry should include:
 
 ## Log
 
+### 2026-07-30 — Seven-Slice Epic-Aligned Delivery Map
+
+**Decision**: Organize delivery into seven ordered vertical slices that collectively cover EPIC-01 through EPIC-14. Define the full sequence and dependencies at roadmap level, then add detailed acceptance criteria and technical design only for the next implementation slice.
+
+**Rationale**: The fourteen epics describe capability ownership but do not by themselves create demonstrable end-to-end user outcomes. A coarse slice map prevents dependency and scope drift while preserving room to adapt later implementation details based on accepted-slice evidence.
+
+**Outcome**: Added `Product-Strategy-Vision/Slice-Map.md` with outcomes, epic alignment, completion evidence, exclusions, an epic-to-slice coverage matrix, and delivery-governance requirements. Slice 1 remains implemented but not accepted; Slice 7 remains explicitly post-V1. Linked the map from the root README.
+
+---
+
+### 2026-07-30 — Shared History Must Be Reusable and Impersonal
+
+**Decision**: Record project history as concise, reusable context rather than a verbatim transcript of personal or behind-the-scenes conversation. Convert useful prompts into self-contained request patterns that collaborators can adapt.
+
+**Rationale**: Shared repository history should help collaborators understand and repeat project work without exposing unnecessary personal phrasing or relationship context.
+
+**Outcome**: Updated `AGENTS.md` with explicit history-writing and privacy-minimization rules. Reworked the July 23–24 prompt list into reusable request patterns and removed unnecessary collaborator-specific wording while preserving authorization and repository-safety outcomes.
+
+---
+
+### 2026-07-29 — Controlled Simulated Conference Fixture Created
+
+**Status**: Implemented test asset; use in the polished demo remains optional.
+
+**Summary**: Created a clearly labeled fictional conference-networking conversation with two distinct local synthetic voices, plus its exact script and expected extraction results. The asset is isolated under `output/audio/` and does not change the Slice 1 application workflow.
+
+**Rationale**: A controlled fixture provides known names, roles, organizations, topics, dates, and commitments, making transcription and grounded-extraction accuracy objectively measurable without privacy or consent concerns.
+
+**Outcome**: Generated a 2:12 M4A and verified it with local MLX Whisper. All critical entities and commitments were retained, including Maya Chen, Daniel Ruiz, ClearPath Labs, Priya Shah, Harborview Community Health, Seattle, the spoken email address, and the August 4, 2026 deadline. Minor transcription substitutions remained, reinforcing human review.
+
+**Validation finding**: The controlled end-to-end Qwen3 run passed contact, topic, third-party introduction, and absolute-deadline extraction, but failed reliable commitment ownership, relative/inferred dates, normalized email output, and user-perspective follow-up. The local architecture remains selected; Slice 1 structured-analysis hardening is required before completion. Evidence and reproduction steps are recorded in `demo/LOCAL-AI-VALIDATION.md`.
+
+### 2026-07-29 — MLX Whisper Selected and Integrated for Local Transcription
+
+**Decision**: Use MLX Whisper with multilingual `mlx-community/whisper-large-v3-turbo` as the default Slice 1 transcription provider on the Apple-silicon demo Mac. Keep Qwen3 through Ollama as the default analysis provider. OpenAI providers remain available only through explicit configuration and are never automatic fallbacks.
+
+**Rationale**: The user selected MLX Whisper after clarifying that avoiding API billing is more important than using the already implemented paid transcription path. MLX Whisper is optimized for Apple silicon and provides a direct local path without per-recording charges.
+
+**Outcome**: Added an isolated MLX environment setup script, pinned dependency, Python transcription adapter, Node provider service, readiness detection, explicit provider routing, provenance, interface status, documentation, and three focused tests. Installed MLX Whisper 0.4.3 and downloaded the `large-v3-turbo` model. All 13 automated tests pass. A synthetic supported WAV was processed through MLX Whisper and Qwen3 with no API key; the result was saved and reopened in the browser. The transcript reproduced the sentence but rendered “Northstar” as “Northster,” reinforcing the existing human-review requirement. Synthetic verification records and audio were removed afterward.
+
+**Supersedes**: The earlier same-day decision to retain OpenAI transcription as the fastest demo path. OpenAI transcription is now an explicitly selected alternative, not the default.
+
+---
+
+### 2026-07-29 — Prioritize Fastest Working Demo over Local Transcription
+
+**Decision**: Keep the existing OpenAI transcription path for the current demo rather than delaying the demo to integrate MLX Whisper, SenseVoice, whisper.cpp, or another local transcription engine. Continue using local Qwen3 for structured analysis when available, with the existing OpenAI fallback.
+
+**Rationale**: The current OpenAI transcription path is already implemented and covered by automated tests. The immediate priority is getting the end-to-end demo working as quickly as possible, not eliminating API usage or completing a fully local pipeline.
+
+**Outcome**: Local transcription becomes an optional post-demo optimization. The immediate remaining validation is a live end-to-end recording test with an OpenAI project API key, followed by correction of any observed demo-blocking issues.
+
+---
+
+### 2026-07-29 — Correction: Local Transcription Provider Not Yet Selected
+
+**Status**: Correction and unresolved decision.
+
+**Summary**: No explicit user approval was found selecting SenseVoice as the local transcription provider. SenseVoice was introduced during local-AI setup work as an implementation assumption and was later described too strongly in project documentation and earlier log entries.
+
+**Outcome / Next Steps**: Treat SenseVoice as one candidate only. The approved local-provider decision currently covers Qwen3 transcript analysis through Ollama. Compare suitable local transcription options and obtain approval before integrating one. Earlier references stating that SenseVoice “will” be connected should be read as superseded proposals pending documentation cleanup.
+
+---
+
 ### 2026-07-29 — Preserve AI Agent Workflow Guidance with Qualified Attribution
 
 **Decision**: Preserve the shared AI-assisted engineering workflow as a repository Markdown reference, while describing it as community guidance inspired by Andrej Karpathy's observations rather than as Karpathy's verified personal or leaked `CLAUDE.md`.
@@ -159,9 +223,9 @@ Each entry should include:
 
 ### 2026-07-18 — Repository Push Target
 
-**Decision**: Push all work to a new private repo under `codexmerchant` (user's own GitHub account), not to `origin` (`6shamim/AI-conference-agent`).
+**Decision**: Push all work to the authorized private fork, not to the collaborator-owned `origin` repository.
 
-**Rationale**: Collaborator Shamim owns the `origin` remote. User explicitly does not want to modify that repo.
+**Rationale**: The collaborator owns the `origin` remote, and the user explicitly did not authorize modifying it.
 
 **Outcome**: New private repo created at `https://github.com/codexmerchant/AI-conference-agent`, added as `personal` remote. All pushes go there only.
 

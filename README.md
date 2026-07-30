@@ -24,6 +24,7 @@ The controlled local-AI evaluation, including the fictional audio fixture, measu
 ## Product documentation
 
 - Product direction: [`Product-Strategy-Vision/`](Product-Strategy-Vision/)
+- Vertical delivery roadmap: [`Product-Strategy-Vision/Slice-Map.md`](Product-Strategy-Vision/Slice-Map.md)
 - Capability specifications: `EPIC-01` through `EPIC-14`
 - AI-assisted engineering workflow: [`AI-Agent-Workflow-Guidance.md`](AI-Agent-Workflow-Guidance.md)
 - Local MLX/Qwen validation evidence: [`demo/LOCAL-AI-VALIDATION.md`](demo/LOCAL-AI-VALIDATION.md)
