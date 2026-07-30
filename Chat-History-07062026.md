@@ -754,3 +754,72 @@ After material project requests, decisions, implementation changes, verification
 - Created the second documentation commit for the seven-slice epic-aligned roadmap, root README navigation, reusable history-governance rules, cleaned collaborative history, and durable roadmap decision.
 - Verified the staged documentation passes the whitespace check and contains no unnecessary personal names, email addresses, or local user paths.
 - Application tests were not rerun because this commit changes documentation and repository instructions only.
+
+## 2026-07-30 — Slice 1 acceptance program started
+
+- Began a gated effort to bring Slice 1 from technical feasibility to complete acceptance, with stakeholder input at material product checkpoints.
+- Drafted the canonical Slice 1 acceptance standard: 85/100 minimum score, nine critical failure gates, deterministic contract checks, controlled and varied fixtures, review-workflow checks, failure/privacy/persistence checks, and required evidence.
+
+## 2026-07-30 — Slice 1 hardened checks and remaining ownership blocker
+
+- Implemented the approved acceptance contract through required conversation identity/date context, evidence-grounded actions, deterministic validation, reviewable uncertainty, editable owners and dates, and correction persistence.
+- Expanded automated coverage to 21 passing tests and verified the key browser review/save/reopen workflow without browser errors.
+- Re-ran the fictional controlled audio through local MLX Whisper and Qwen3. Contact identity, normalized email, supported-date handling, and local execution passed.
+- The critical ownership gate still failed. A mono transcript provides timestamped speech segments but no speaker identity; prompt-based attribution marked material commitments unclear and confidently misassigned two user commitments to the contact.
+- Recorded the result as an acceptance failure rather than averaging it into the score. The next required product choice is automatic two-speaker diarization versus mandatory human speaker confirmation before actions are accepted.
+
+## 2026-07-30 — Automatic speaker diarization approved
+
+- Approved automatic within-recording speaker diarization as the Slice 1 solution for grounding speaker identity and commitment ownership.
+- Retained human speaker confirmation as a conditional fallback when automatic mapping is uncertain, rather than requiring it for every interaction.
+- Confirmed that the normal workflow should remain automatic: no routine speaker-confirmation screen. Advanced models should handle successful cases directly, with visible editable ownership and an interruption only for low-confidence or conflicting mappings.
+
+## 2026-07-30 — Slice 1 accepted after diarization integration
+
+- Integrated pinned FluidAudio 0.7.12 as a fully local within-recording speaker diarizer compatible with the demo Mac's installed Swift toolchain.
+- Aligned MLX Whisper timestamp segments to FluidAudio voice clusters and mapped introduced identities deterministically, while leaving unmapped voices reviewable.
+- Made speaker-labelled evidence authoritative over contradictory model participant fields and removed unsupported contact fields from irrelevant or unclear audio.
+- Expanded the automated suite to 27 passing tests, including diarization, ambiguous/extra speakers, unsupported contacts, missing details, dates, consent, provider failures, persistence, and review controls.
+- Re-ran the controlled fixture and browser workflow. The final score is 94/100, all nine critical gates pass, and upload, visible speaker labels, correct owners, save, list, and reopen were verified.
+- Marked Slice 1 accepted with visible human review retained for low-confidence evidence and exceptional speaker mappings.
+
+## 2026-07-30 — Full reruns retained for demo testing
+
+- Confirmed that uploading an identical audio file intentionally reruns the full local pipeline and may create a separate saved interaction.
+- Accepted this behavior for the testing phase because it exposes consistency, latency, and model variability.
+- Deferred identical-file caching and content-hash deduplication as a production optimization; same-ID save/update protection remains required.
+
+## 2026-07-30 — Controlled fixture preset added
+
+- Added a testing helper above the capture metadata fields to fill the canonical conference, interaction, participant identity, and interaction date in one click.
+- Kept audio selection and permission confirmation separate so the helper does not bypass the real processing workflow.
+- Marked the control as a demo/testing convenience rather than intended production UI.
+- Added a machine-readable expected result for the controlled conference fixture, including explicit user identity, interaction date/timezone, contact, topics, commitments, owners, supported dates, and follow-up perspective.
+- Identified the first product decision required before implementation: how the demo represents the app user's identity when a controlled fixture participant differs from the visible workspace profile. The acceptance standard and identity approach remain pending stakeholder approval.
+
+### Acceptance scoring approved
+
+- Approved the combined acceptance rule: a weighted score of at least 85/100 and no critical-gate failures.
+- Clarified that noncritical transcription, completeness, phrasing, and usability deductions can reduce a gate-clean result to 85, while a serious correctness or safety failure rejects even a result with a higher aggregate score.
+- User identity remains the unresolved portion of the first checkpoint.
+
+### User identity approved and Checkpoint 2 implemented
+
+- Approved a required per-conversation user name that defines `Me`; normal demo use defaults to the workspace user, while the controlled fixture names Maya Chen. If that identity cannot be grounded in the transcript, ownership must remain `Unclear`.
+- Added interaction date and browser timezone context so relative dates can be resolved only against supplied metadata.
+- Passed identity/date context through the real processing endpoint and both analysis providers, persisted it with interactions, and expanded the action schema with participant, evidence, date evidence, nullable date, and field confidence.
+- Replaced the permissive ownership/date prompt with explicit grounding rules for identity, dates, contact selection, evidence, and follow-up perspective.
+- All 13 existing automated tests and JavaScript syntax checks pass after the contract change. Additional behavior/regression tests remain part of later checkpoints.
+
+## 2026-07-30 — Resume summary prepared
+
+- Reviewed the implemented demo, product roadmap, specifications, and validation evidence to identify accurate resume-ready achievements.
+- Highlighted the end-to-end local AI workflow, privacy-conscious provider design, speaker diarization and evidence grounding, product planning across 14 epics and seven vertical slices, and automated/controlled validation.
+- Used only repository-supported metrics: 95.89% controlled-fixture transcription accuracy, 27/27 passing automated tests, nine of nine critical acceptance gates, and a 94/100 Slice 1 acceptance score.
+- No implementation files or product behavior were changed.
+
+## 2026-07-30 — Administrative-assistant resume positioning
+
+- Reframed the AI Conference Agent project for administrative-assistant roles at technology companies.
+- Emphasized documentation, project organization, requirements tracking, quality review, technical-team communication, confidentiality, and workflow improvement rather than positioning the candidate as a software engineer.
+- No implementation files or product behavior were changed.

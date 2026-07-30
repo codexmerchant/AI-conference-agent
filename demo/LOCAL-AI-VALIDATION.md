@@ -113,3 +113,27 @@ Open <http://localhost:4173>, upload the fictional M4A fixture, confirm permissi
 - **Slice 1 status:** Core pipeline proven; structured-analysis hardening remains
 
 This is an evidence snapshot, not a general benchmark. Results may change with model versions, hardware, prompts, audio conditions, and fixture design.
+
+## July 30 hardened acceptance run
+
+The hardened implementation adds required user identity, interaction date and timezone, evidence-bearing actions, deterministic email/date/ownership validation, derived confidence, visible review flags, editable owners and dates, and persistence of corrections. The automated suite passes 21 of 21 tests, and browser validation confirmed the sample workflow, editing, save/reopen, and absence of browser errors.
+
+The controlled real-audio run used immutable MLX timestamp segments and a constrained Qwen3 speaker-label contract. It completed successfully in approximately 126 seconds and correctly returned Daniel Ruiz, his role and company, and `daniel.ruiz@clearpathlabs.com`. Supported dates were preserved and the unsupported `later that week` date remained absent.
+
+The run still failed the critical ownership gate. Several commitments were labeled with an unclear speaker, while two Maya commitments were confidently attributed to Daniel. The generated summary also misattributed who would send the overview. Because the source is a mono recording and MLX timestamps do not contain speaker identity, prompt-only attribution is not adequate acceptance evidence. The required product decision is whether Slice 1 adds automatic two-speaker diarization or requires explicit human speaker confirmation before actions become accepted.
+
+## July 30 final diarized acceptance run
+
+The failed prompt-only speaker reconstruction was replaced with local FluidAudio 0.7.12 diarization. MLX timestamp segments are aligned to FluidAudio voice segments, and spoken self-introductions map the within-recording voice clusters to the supplied app user and extracted contact. Voice embeddings are not persisted.
+
+The final controlled result correctly assigned Maya's preparation tasks to `Me`, Daniel's Harborview introduction to `Contact`, and the three-person call to `Mutual`. Daniel's identity, role, company, and normalized email were correct. August 3 and August 4 were grounded from the supplied interaction date and transcript evidence; `later that week` remained undated. The summary and follow-up used Maya's perspective and made no false completion claims.
+
+Final evidence:
+
+- Weighted controlled score: **94/100**
+- Critical gates: **9/9 pass**
+- Automated tests: **27/27 pass**
+- Browser workflow: **pass** for upload, consent, labelled transcript, review, save, list, and reopen
+- FluidAudio diarization time: approximately **1.5–2.0 seconds** for the 2:12 fixture after model setup
+- Remaining review signal: one overview action is 25% supported because its selected evidence says “materials” rather than repeating the full overview description
+- Slice 1 status: **accepted with visible human review for uncertain evidence and exceptional speaker mappings**

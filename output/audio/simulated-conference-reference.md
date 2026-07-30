@@ -6,6 +6,9 @@ This is a fictional, synthetic test fixture created for the AI Conference Agent 
 
 - Event: HealthTech Futures 2026
 - Setting: Networking area after a panel on responsible clinical AI
+- Interaction date: August 2, 2026
+- Timezone: America/Los_Angeles
+- App user: Maya Chen
 - Speaker 1: Maya Chen, Product Lead at Northstar Health
 - Speaker 2: Daniel Ruiz, Director of Partnerships at ClearPath Labs
 

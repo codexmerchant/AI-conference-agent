@@ -56,14 +56,23 @@
               <span class="step-pill">01 · Capture</span>
               <h2>Start with one meaningful conversation.</h2>
               <p>Upload a short recording. The demo will turn it into a transcript, contact, topics, summary, actions, and a follow-up draft.</p>
-              <div class="privacy-note"><span aria-hidden="true">◇</span> Uploaded audio, MLX Whisper transcription, and Qwen3 analysis stay on this Mac with the default provider settings.</div>
+              <div class="privacy-note"><span aria-hidden="true">◇</span> Uploaded audio, MLX Whisper transcription, FluidAudio speaker separation, and Qwen3 analysis stay on this Mac with the default provider settings.</div>
             </div>
 
             <form class="capture-form" id="capture-form">
+              <div class="test-preset">
+                <div><strong>Testing the controlled fixture?</strong><span>Fill the approved Maya and Daniel test context in one click.</span></div>
+                <button class="button secondary" id="controlled-test-preset" type="button">Use controlled test settings</button>
+              </div>
               <div class="field-row">
                 <label>Conference<input id="conference-name" value="Human-Centered AI Summit 2026" required /></label>
                 <label>Interaction<input id="session-name" value="Expo floor conversation" required /></label>
               </div>
+              <div class="field-row">
+                <label>Your name in this conversation<input id="user-name" value="Zain" autocomplete="name" required /></label>
+                <label>Interaction date<input id="interaction-date" type="date" required /></label>
+              </div>
+              <input id="interaction-timezone" type="hidden" />
               <label class="drop-zone" id="drop-zone" for="audio-file">
                 <input id="audio-file" type="file" accept="audio/*" />
                 <span class="upload-icon" aria-hidden="true">↑</span>
@@ -118,8 +127,9 @@
                 <article class="panel summary-panel">
                   <div class="panel-heading">
                     <div><span class="step-pill coral">02 · Understand</span><h3>Conversation brief</h3></div>
-                    <span class="confidence">92% confidence</span>
+                    <span class="confidence" id="analysis-confidence">Review required</span>
                   </div>
+                  <div class="review-flags" id="review-flags" hidden></div>
                   <label class="sr-only" for="summary">Meeting summary</label>
                   <textarea class="editable summary-editor" id="summary"></textarea>
                   <div class="topic-list" id="topics"></div>

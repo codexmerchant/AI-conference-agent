@@ -19,6 +19,8 @@ MLX Whisper local transcription and Qwen3 local analysis are integrated. Follow 
 
 See the [local AI validation record](LOCAL-AI-VALIDATION.md) for the controlled fictional fixture, measured MLX accuracy, Qwen extraction results, known failures, and reproduction steps.
 
+Slice 1 completion is governed by the [acceptance standard](SLICE-1-ACCEPTANCE.md), including its weighted scorecard, critical failure gates, required fixtures, and evidence requirements.
+
 ## Run
 
 Requires Node.js 20 or newer on an Apple-silicon Mac. First install the local transcription environment:

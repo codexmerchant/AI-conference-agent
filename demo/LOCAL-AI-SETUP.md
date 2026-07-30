@@ -4,7 +4,7 @@ This is the running setup guide for processing Slice 1 recordings locally, witho
 
 The intended local pipeline is:
 
-`Audio → MLX Whisper transcription → Qwen3 analysis → Review and save`
+`Audio → MLX Whisper transcription + FluidAudio speaker diarization → Qwen3 analysis → Review and save`
 
 Local MLX Whisper transcription and Qwen3 analysis have been verified on an Apple M3 Mac with 18 GB of unified memory. The default workflow does not silently fall back to a paid provider.
 
@@ -18,7 +18,17 @@ sh scripts/setup-local-transcription.sh
 
 The script verifies Apple silicon and FFmpeg, creates an isolated `.venv`, installs the pinned MLX Whisper package, and checks that it can load. The multilingual `mlx-community/whisper-large-v3-turbo` model downloads automatically on the first real transcription and is cached for later use.
 
-## 2. Check whether Ollama is installed and running
+## 2. Install FluidAudio speaker diarization
+
+From the demo directory, run:
+
+```bash
+sh scripts/setup-local-diarization.sh
+```
+
+The script builds the Swift-5.10-compatible FluidAudio 0.7.12 release locally. Its Core ML speaker models download automatically on the first recording and remain in FluidAudio's normal application-support cache. Diarization separates voices only within the current recording; the demo does not persist voice embeddings or create biometric identity profiles.
+
+## 3. Check whether Ollama is installed and running
 
 Ollama and OpenClaw are separate applications. Run:
 
@@ -36,7 +46,7 @@ Interpretation:
 - `/Applications/Ollama.app` means the graphical Mac application is installed.
 - Output from `pgrep` means the Mac application/server process is running.
 
-## 3. Start Ollama
+## 4. Start Ollama
 
 For a Homebrew installation, start the server in the current terminal:
 
@@ -52,7 +62,7 @@ brew services start ollama
 
 For the graphical installation, open **Ollama** from the Applications folder and look for its menu-bar icon.
 
-## 4. Download and run Qwen3 8B
+## 5. Download and run Qwen3 8B
 
 The default Qwen3 Ollama package is approximately 5.2 GB and is suitable for an M3 Mac with 18 GB of memory:
 
@@ -62,7 +72,7 @@ ollama run qwen3
 
 When the `>>>` prompt appears, the model is ready.
 
-## 5. Test clean JSON output
+## 6. Test clean JSON output
 
 Inside the interactive prompt, enter this command on its own line:
 
@@ -86,7 +96,7 @@ Exit the interactive session with:
 
 The demo integration will also set `think: false` and request JSON through Ollama's local API instead of relying on the interactive setting.
 
-## 6. Verify the local API
+## 7. Verify the local API
 
 ```bash
 curl http://localhost:11434/api/tags
@@ -102,6 +112,7 @@ The response should include `qwen3:latest`. Ollama must be running whenever the 
 - [x] MLX Whisper approved as the local transcription provider
 - [x] MLX Whisper installed and smoke-tested
 - [x] MLX Whisper connected to the Slice 1 demo
+- [x] FluidAudio approved for automatic within-recording speaker diarization
 - [x] Complete local recording workflow browser-tested with a synthetic WAV fixture
 
 ## Local transcription provider comparison

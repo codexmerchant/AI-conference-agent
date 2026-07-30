@@ -1,0 +1,90 @@
+{
+  "fixtureVersion": "1.0",
+  "context": {
+    "userName": "Maya Chen",
+    "interactionDate": "2026-08-02",
+    "timezone": "America/Los_Angeles",
+    "conferenceName": "HealthTech Futures 2026",
+    "sessionName": "Networking area after a responsible-clinical-AI panel"
+  },
+  "contact": {
+    "name": "Daniel Ruiz",
+    "role": "Director of Partnerships",
+    "company": "ClearPath Labs",
+    "email": "daniel.ruiz@clearpathlabs.com"
+  },
+  "requiredTopics": [
+    "clinical documentation",
+    "hospital integration",
+    "consent",
+    "local processing",
+    "clinician review",
+    "Seattle pilot"
+  ],
+  "commitments": [
+    {
+      "owner": "Me",
+      "participant": "Maya Chen",
+      "action": "Send Daniel a one-page pilot overview and privacy architecture",
+      "dueDate": "2026-08-03",
+      "dateEvidence": "tomorrow afternoon",
+      "requiredDetails": [
+        "workflow",
+        "consent",
+        "local data handling",
+        "review process",
+        "success metrics",
+        "pilot price range",
+        "correction examples"
+      ]
+    },
+    {
+      "owner": "Contact",
+      "participant": "Daniel Ruiz",
+      "action": "Review the pilot materials",
+      "dueDate": null,
+      "dateEvidence": null,
+      "requiredDetails": []
+    },
+    {
+      "owner": "Contact",
+      "participant": "Daniel Ruiz",
+      "action": "Introduce Maya to Priya Shah at Harborview Community Health",
+      "dueDate": "2026-08-04",
+      "dateEvidence": "Tuesday, August 4, 2026",
+      "requiredDetails": []
+    },
+    {
+      "owner": "Mutual",
+      "participant": null,
+      "action": "Schedule a 30-minute call with Maya, Daniel, and Priya after the introduction",
+      "dueDate": null,
+      "dateEvidence": "later that week",
+      "requiredDetails": [
+        "Maya can hold Thursday and Friday"
+      ]
+    }
+  ],
+  "followUp": {
+    "sender": "Maya Chen",
+    "recipient": "Daniel Ruiz",
+    "mustMention": [
+      "pilot overview",
+      "privacy architecture",
+      "Priya Shah or Harborview introduction",
+      "Thursday or Friday availability"
+    ],
+    "mustNotClaim": [
+      "Daniel will send the pilot materials",
+      "the introduction has already happened",
+      "the three-person call is already scheduled"
+    ]
+  },
+  "criticalGates": {
+    "correctCommitmentOwnership": true,
+    "noInventedDates": true,
+    "correctFollowUpPerspective": true,
+    "correctPrimaryContact": true,
+    "noFalseCompletionClaims": true
+  }
+}

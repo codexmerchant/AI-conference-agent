@@ -35,7 +35,19 @@ def main():
         raise RuntimeError("MLX Whisper returned an empty transcript")
 
     Path(args.output).write_text(
-        json.dumps({"text": text}, ensure_ascii=False),
+        json.dumps({
+            "text": text,
+            "segments": [
+                {
+                    "id": index,
+                    "start": segment.get("start"),
+                    "end": segment.get("end"),
+                    "text": str(segment.get("text", "")).strip(),
+                }
+                for index, segment in enumerate(result.get("segments", []))
+                if str(segment.get("text", "")).strip()
+            ],
+        }, ensure_ascii=False),
         encoding="utf-8",
     )
 

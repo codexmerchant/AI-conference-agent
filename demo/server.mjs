@@ -3,8 +3,11 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createDemoAnalysis, createRealAnalysis, normalizeInteraction } from "./lib/demo-data.mjs";
+import { inferOtherParticipantName, validateAnalysis } from "./lib/analysis-validation.mjs";
+import { attributeTranscriptSegments, diarizeAudioLocally, getFluidDiarizationStatus } from "./lib/fluid-diarization-service.mjs";
 import { MediaStore } from "./lib/media-store.mjs";
 import { getMlxWhisperStatus, transcribeAudioLocally } from "./lib/mlx-whisper-service.mjs";
+import { validateAudioFile, validateInteractionContext, validateProcessingPermission } from "./lib/interaction-context.mjs";
 import { analyzeTranscript, ProviderError, transcribeAudio } from "./lib/openai-service.mjs";
 import { analyzeTranscriptLocally, getOllamaStatus } from "./lib/ollama-service.mjs";
 import { chooseAnalysisProvider, chooseTranscriptionProvider } from "./lib/provider-routing.mjs";
@@ -85,7 +88,7 @@ export function createServer() {
       const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
 
       if (url.pathname === "/api/health") {
-        const [ollama, mlxWhisper] = await Promise.all([getOllamaStatus(), getMlxWhisperStatus()]);
+        const [ollama, mlxWhisper, diarization] = await Promise.all([getOllamaStatus(), getMlxWhisperStatus(), getFluidDiarizationStatus()]);
         const transcriptionPreference = process.env.TRANSCRIPTION_PROVIDER || "mlx";
         const analysisPreference = process.env.ANALYSIS_PROVIDER || "ollama";
         const openAIConfigured = Boolean(process.env.OPENAI_API_KEY);
@@ -93,12 +96,13 @@ export function createServer() {
         const analysisReady = analysisPreference === "ollama" ? ollama.available && ollama.modelReady : openAIConfigured;
         return json(res, 200, {
           status: "ok",
-          realProcessingConfigured: transcriptionReady && analysisReady,
+          realProcessingConfigured: transcriptionReady && analysisReady && diarization.available,
           openAIConfigured,
           transcriptionProvider: transcriptionPreference,
           analysisProvider: analysisPreference,
           localTranscriptionReady: mlxWhisper.available,
           localAnalysisReady: ollama.available && ollama.modelReady,
+          localDiarizationReady: diarization.available,
           transcriptionModel: transcriptionPreference === "mlx" ? mlxWhisper.model : process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-transcribe",
           cloudAnalysisModel: process.env.OPENAI_TEXT_MODEL || "gpt-5.6-terra",
           localAnalysisModel: ollama.model
@@ -112,7 +116,14 @@ export function createServer() {
 
       if (url.pathname === "/api/process" && req.method === "POST") {
         try {
-          const [ollama, mlxWhisper] = await Promise.all([getOllamaStatus(), getMlxWhisperStatus()]);
+          const [ollama, mlxWhisper, diarization] = await Promise.all([getOllamaStatus(), getMlxWhisperStatus(), getFluidDiarizationStatus()]);
+          if (!diarization.available) {
+            throw new ProviderError("FluidAudio diarization is not ready. Run the local diarization setup first.", {
+              status: 503,
+              code: "fluid_diarization_unavailable",
+              retryable: false
+            });
+          }
           const openAIConfigured = Boolean(process.env.OPENAI_API_KEY);
           const transcriptionProvider = chooseTranscriptionProvider({
             preference: process.env.TRANSCRIPTION_PROVIDER || "mlx",
@@ -126,64 +137,86 @@ export function createServer() {
           });
           const form = await multipart(req);
           const audio = form.get("audio");
-          if (!(audio instanceof File) || !audio.size) {
-            const error = new Error("Choose an audio file to process");
-            error.status = 400;
-            throw error;
-          }
-          if (audio.size > maxAudioBytes) {
-            const error = new Error("Audio upload exceeds the 25 MB limit");
-            error.status = 413;
-            throw error;
-          }
-          if (form.get("consentConfirmed") !== "true") {
-            const error = new Error("Confirm that you have permission to process this recording");
-            error.status = 400;
-            throw error;
-          }
+          validateAudioFile(audio, maxAudioBytes);
+          validateProcessingPermission(form.get("consentConfirmed"));
+
+          const context = validateInteractionContext({
+            userName: form.get("userName"),
+            interactionDate: form.get("interactionDate"),
+            timezone: form.get("timezone")
+          });
 
           const input = {
             conferenceName: String(form.get("conferenceName") || ""),
             sessionName: String(form.get("sessionName") || ""),
+            ...context,
             duration: String(form.get("duration") || "—")
           };
           const audioBytes = Buffer.from(await audio.arrayBuffer());
-          const transcript = transcriptionProvider === "mlx"
-            ? await transcribeAudioLocally({
+          const [transcriptionResult, diarizationResult] = await Promise.all([
+            transcriptionProvider === "mlx"
+              ? transcribeAudioLocally({
                 bytes: audioBytes,
                 fileName: audio.name,
                 model: mlxWhisper.model
               })
-            : await transcribeAudio({
+              : transcribeAudio({
                 bytes: audioBytes,
                 fileName: audio.name,
                 mimeType: audio.type,
                 apiKey: process.env.OPENAI_API_KEY,
                 model: process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-transcribe"
-              });
-          const analysis = analysisProvider === "ollama"
+              }),
+            diarizeAudioLocally({ bytes: audioBytes, fileName: audio.name })
+          ]);
+          const transcript = typeof transcriptionResult === "string" ? transcriptionResult : transcriptionResult.text;
+          const segments = typeof transcriptionResult === "string"
+            ? [{ id: 0, text: transcript }]
+            : transcriptionResult.segments;
+          const otherParticipantName = inferOtherParticipantName(transcript, input.userName);
+          const attribution = attributeTranscriptSegments({
+            transcriptSegments: segments,
+            diarizationSegments: diarizationResult.segments,
+            userName: input.userName,
+            otherParticipantName
+          });
+          const attributedTranscript = attribution.transcript;
+          const providerAnalysis = analysisProvider === "ollama"
             ? await analyzeTranscriptLocally({
-                transcript,
+                transcript: attributedTranscript,
                 conferenceName: input.conferenceName,
                 sessionName: input.sessionName,
+                userName: input.userName,
+                interactionDate: input.interactionDate,
+                timezone: input.timezone,
                 model: ollama.model
               })
             : await analyzeTranscript({
-                transcript,
+                transcript: attributedTranscript,
                 conferenceName: input.conferenceName,
                 sessionName: input.sessionName,
+                userName: input.userName,
+                interactionDate: input.interactionDate,
+                timezone: input.timezone,
                 apiKey: process.env.OPENAI_API_KEY,
                 model: process.env.OPENAI_TEXT_MODEL || "gpt-5.6-terra"
               });
+          const analysis = validateAnalysis({
+            analysis: providerAnalysis,
+            transcript: attributedTranscript,
+            userName: input.userName,
+            interactionDate: input.interactionDate
+          });
           const media = await mediaStore.save({ bytes: audioBytes, originalName: audio.name, mimeType: audio.type });
           return json(res, 200, createRealAnalysis({
             input,
-            transcript,
+            transcript: attributedTranscript,
             analysis,
             media,
             providers: {
               transcription: transcriptionProvider === "mlx" ? `Local MLX Whisper (${mlxWhisper.model})` : "OpenAI file transcription",
-              analysis: analysisProvider === "ollama" ? `Local ${ollama.model} structured analysis` : "OpenAI structured transcript analysis"
+              analysis: analysisProvider === "ollama" ? `Local ${ollama.model} structured analysis` : "OpenAI structured transcript analysis",
+              speakerAttribution: `Local FluidAudio 0.7.12 diarization (${diarizationResult.processingTimeSeconds?.toFixed(1) || "—"}s)`
             }
           }));
         } catch (error) {

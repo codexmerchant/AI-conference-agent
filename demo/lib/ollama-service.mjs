@@ -1,4 +1,4 @@
-import { analysisInstruction, analysisSchema, ProviderError } from "./openai-service.mjs";
+import { analysisContext, analysisInstruction, analysisSchema, ProviderError } from "./openai-service.mjs";
 
 const DEFAULT_BASE_URL = "http://127.0.0.1:11434";
 
@@ -47,6 +47,9 @@ export async function analyzeTranscriptLocally({
   transcript,
   conferenceName,
   sessionName,
+  userName,
+  interactionDate,
+  timezone,
   fetchImpl = fetch,
   baseUrl = process.env.OLLAMA_BASE_URL || DEFAULT_BASE_URL,
   model = process.env.OLLAMA_MODEL || "qwen3"
@@ -64,7 +67,7 @@ export async function analyzeTranscriptLocally({
         { role: "system", content: analysisInstruction },
         {
           role: "user",
-          content: `Return only JSON matching this schema: ${JSON.stringify(analysisSchema)}\n\nConference: ${conferenceName || "Unknown"}\nInteraction: ${sessionName || "Unknown"}\n\nTranscript:\n${transcript}`
+          content: `Return only JSON matching this schema: ${JSON.stringify(analysisSchema)}\n\n${analysisContext({ transcript, conferenceName, sessionName, userName, interactionDate, timezone })}`
         }
       ]
     })

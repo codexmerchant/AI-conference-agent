@@ -25,10 +25,14 @@ export const analysisSchema = {
         additionalProperties: false,
         properties: {
           text: { type: "string" },
-          owner: { type: "string", enum: ["Me", "Contact", "Mutual", "Unassigned"] },
-          dueDate: { type: "string" }
+          owner: { type: "string", enum: ["Me", "Contact", "Mutual", "Unclear"] },
+          participant: { type: "string" },
+          dueDate: { type: ["string", "null"] },
+          dateEvidence: { type: ["string", "null"] },
+          evidence: { type: "string" },
+          confidence: { type: "number", minimum: 0, maximum: 1 }
         },
-        required: ["text", "owner", "dueDate"]
+        required: ["text", "owner", "participant", "dueDate", "dateEvidence", "evidence", "confidence"]
       }
     },
     followUp: { type: "string" }
@@ -46,7 +50,40 @@ export class ProviderError extends Error {
   }
 }
 
-export const analysisInstruction = "Extract accurate conference-interaction intelligence from the supplied transcript. Do not invent contact details, commitments, or dates. Use an empty string when a contact field is unknown. The summary must remain factual and concise. Follow-up drafts must reference concrete discussion points, avoid claiming attachments or actions not supported by the transcript, and never imply that a message has been sent. Interpret first-person commitments by the app user as owner 'Me'.";
+export const analysisInstruction = `Extract evidence-grounded conference-interaction intelligence from the supplied transcript and context.
+
+Identity and ownership rules:
+- The app user is explicitly named in the context. "Me" means only that person.
+- The primary contact must be a participant other than the app user.
+- Assign owner "Me" only when the evidence supports the app user making the commitment.
+- Assign owner "Contact" only when the evidence supports the primary contact making the commitment.
+- Use "Mutual" for a genuinely shared next step and "Unclear" when ownership cannot be grounded.
+- If the app user cannot be identified in the transcript, do not guess first-person ownership.
+
+Date rules:
+- Return due dates as YYYY-MM-DD or null.
+- Resolve relative dates only from the supplied interaction date and timezone.
+- Preserve the exact supporting date phrase in dateEvidence.
+- Never invent a date for phrases such as "later", "afterward", or "later that week"; use null unless an exact date is supported.
+
+Grounding rules:
+- Do not invent contact details, commitments, actions, dates, or completion state.
+- Use empty strings for unknown contact fields.
+- Normalize clearly spoken email components such as "dot" and "at", but do not guess missing components.
+- Every action must include concise transcript evidence and a confidence score.
+- The summary must remain factual, concise, and attribute commitments correctly.
+- The follow-up must be written from the app user to the primary contact, describe promises as future work unless the context says they were completed, and never claim that a message, attachment, introduction, or meeting has already occurred without evidence.`;
+
+export function analysisContext({ transcript, conferenceName, sessionName, userName, interactionDate, timezone }) {
+  return `Conference: ${conferenceName || "Unknown"}
+Interaction: ${sessionName || "Unknown"}
+App user: ${userName || "Unknown"}
+Interaction date: ${interactionDate || "Unknown"}
+Timezone: ${timezone || "Unknown"}
+
+Transcript:
+${transcript}`;
+}
 
 async function providerRequest(fetchImpl, url, options) {
   let response;
@@ -97,7 +134,7 @@ function outputText(response) {
   throw new ProviderError("The analysis provider returned no structured output", { code: "empty_analysis" });
 }
 
-export async function analyzeTranscript({ transcript, conferenceName, sessionName, apiKey, fetchImpl = fetch, model = "gpt-5.6-terra" }) {
+export async function analyzeTranscript({ transcript, conferenceName, sessionName, userName, interactionDate, timezone, apiKey, fetchImpl = fetch, model = "gpt-5.6-terra" }) {
   if (!apiKey) throw new ProviderError("OPENAI_API_KEY is not configured", { status: 503, code: "missing_api_key", retryable: false });
 
   const result = await providerRequest(fetchImpl, `${API_BASE}/responses`, {
@@ -121,7 +158,7 @@ export async function analyzeTranscript({ transcript, conferenceName, sessionNam
           content: [
             {
               type: "input_text",
-              text: `Conference: ${conferenceName || "Unknown"}\nInteraction: ${sessionName || "Unknown"}\n\nTranscript:\n${transcript}`
+              text: analysisContext({ transcript, conferenceName, sessionName, userName, interactionDate, timezone })
             }
           ]
         }
@@ -146,6 +183,7 @@ export async function analyzeTranscript({ transcript, conferenceName, sessionNam
   }
   return parsed;
 }
+
 
 export async function processAudio({ transcriptionModel = "gpt-transcribe", analysisModel = "gpt-5.6-terra", ...input }) {
   const transcript = await transcribeAudio({ ...input, model: transcriptionModel });

@@ -18,6 +18,9 @@ export function createDemoAnalysis(input = {}) {
     id,
     conferenceName: input.conferenceName?.trim() || "Human-Centered AI Summit 2026",
     sessionName: input.sessionName?.trim() || "Expo floor conversation",
+    userName: input.userName?.trim() || "Zain",
+    interactionDate: input.interactionDate || new Date().toISOString().slice(0, 10),
+    timezone: input.timezone || "UTC",
     fileName: input.fileName || "maya-chen-conversation.m4a",
     fileSize: Number(input.fileSize) || 2_840_320,
     duration: input.duration || "02:14",
@@ -40,21 +43,33 @@ export function createDemoAnalysis(input = {}) {
         id: `${id}_action_1`,
         text: "Send Maya the AI conference agent product brief",
         owner: "Me",
-        dueDate: "Next Tuesday",
+        participant: "Zain",
+        dueDate: null,
+        dateEvidence: "next Tuesday",
+        evidence: "I will send you our short product brief next Tuesday",
+        confidence: 0.98,
         completed: false
       },
       {
         id: `${id}_action_2`,
         text: "Include proposed evaluation criteria in the brief",
         owner: "Me",
-        dueDate: "Next Tuesday",
+        participant: "Zain",
+        dueDate: null,
+        dateEvidence: "next Tuesday",
+        evidence: "Include your proposed evaluation criteria",
+        confidence: 0.95,
         completed: false
       },
       {
         id: `${id}_action_3`,
         text: "Schedule a 30-minute product feedback session",
         owner: "Mutual",
-        dueDate: "After brief review",
+        participant: "",
+        dueDate: null,
+        dateEvidence: "afterward",
+        evidence: "Would you be open to a thirty-minute feedback session afterward? Absolutely.",
+        confidence: 0.92,
         completed: false
       }
     ],
@@ -68,6 +83,13 @@ As promised, I’ll send our short AI conference agent product brief next Tuesda
 
 Thanks again,
 Zain`,
+    reviewFlags: [],
+    quality: {
+      contactConfidence: 0.92,
+      actionConfidence: 0.95,
+      overallConfidence: 0.94,
+      requiresReview: false
+    },
     provenance: {
       transcript: "Simulated transcription",
       extraction: "Deterministic demo analysis",
@@ -85,6 +107,9 @@ export function createRealAnalysis({ input, transcript, analysis, media, provide
     id,
     conferenceName: input.conferenceName?.trim() || "Untitled conference",
     sessionName: input.sessionName?.trim() || "Untitled interaction",
+    userName: input.userName,
+    interactionDate: input.interactionDate,
+    timezone: input.timezone,
     fileName: media.originalName,
     fileSize: media.size,
     mediaId: media.id,
@@ -103,9 +128,17 @@ export function createRealAnalysis({ input, transcript, analysis, media, provide
       completed: false
     })),
     followUp: analysis.followUp,
+    reviewFlags: analysis.reviewFlags || [],
+    quality: analysis.quality || {
+      contactConfidence: analysis.contact.confidence || 0,
+      actionConfidence: 0,
+      overallConfidence: 0,
+      requiresReview: true
+    },
     provenance: {
       transcript: providers.transcription || "OpenAI file transcription",
       extraction: providers.analysis || "OpenAI structured transcript analysis",
+      speakerAttribution: providers.speakerAttribution || "Two-person turn reconstruction",
       notice: "AI-generated output — review before use"
     }
   };
@@ -119,8 +152,12 @@ export function normalizeInteraction(value) {
     ? value.actionItems.map((item, index) => ({
         id: String(item.id || `${value.id}_action_${index + 1}`),
         text: String(item.text || "").trim(),
-        owner: String(item.owner || "Unassigned"),
-        dueDate: String(item.dueDate || "No due date"),
+        owner: String(item.owner || "Unclear"),
+        participant: String(item.participant || ""),
+        dueDate: item.dueDate ? String(item.dueDate) : null,
+        dateEvidence: item.dateEvidence ? String(item.dateEvidence) : null,
+        evidence: String(item.evidence || ""),
+        confidence: Number.isFinite(Number(item.confidence)) ? Number(item.confidence) : 0,
         completed: Boolean(item.completed)
       })).filter((item) => item.text)
     : [];
@@ -130,6 +167,9 @@ export function normalizeInteraction(value) {
     id: value.id,
     conferenceName: String(value.conferenceName || "Untitled conference").trim(),
     sessionName: String(value.sessionName || "Untitled interaction").trim(),
+    userName: String(value.userName || "").trim(),
+    interactionDate: String(value.interactionDate || ""),
+    timezone: String(value.timezone || "UTC"),
     transcript: String(value.transcript || ""),
     summary: String(value.summary || ""),
     followUp: String(value.followUp || ""),
@@ -142,6 +182,16 @@ export function normalizeInteraction(value) {
     },
     topics: Array.isArray(value.topics) ? value.topics.map(String).filter(Boolean) : [],
     actionItems,
+    reviewFlags: Array.isArray(value.reviewFlags) ? value.reviewFlags.map((flag) => ({
+      code: String(flag.code || "review_required"),
+      message: String(flag.message || "Review required")
+    })) : [],
+    quality: {
+      contactConfidence: Number(value.quality?.contactConfidence) || 0,
+      actionConfidence: Number(value.quality?.actionConfidence) || 0,
+      overallConfidence: Number(value.quality?.overallConfidence) || 0,
+      requiresReview: Boolean(value.quality?.requiresReview)
+    },
     updatedAt: new Date().toISOString()
   };
 }

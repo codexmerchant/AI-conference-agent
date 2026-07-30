@@ -17,6 +17,58 @@ Each entry should include:
 
 ## Log
 
+### 2026-07-30 — One-Click Controlled Fixture Metadata
+
+**Decision**: Add a clearly labelled testing helper above the capture metadata fields that fills the canonical controlled fixture context in one click. It does not select audio or bypass permission confirmation.
+
+**Rationale**: Re-entering Maya Chen, the August 2 fixture date, conference, and interaction name on every repeated acceptance run creates avoidable testing friction and increases the chance of invalid ownership or relative-date results.
+
+**Outcome / Next Steps**: Added `Use controlled test settings` above the four metadata fields. Keep this as a demo/testing convenience and exclude or gate it in the production interface.
+
+### 2026-07-30 — Identical-File Reprocessing Accepted During Testing
+
+**Decision**: During the current demo-testing phase, intentionally uploading the same audio again may run the complete transcription, diarization, analysis, and validation pipeline and create a separate interaction if saved. Identical-file caching and content-hash deduplication are deferred.
+
+**Rationale**: Full reruns help evaluate consistency, latency, and model variability. Existing duplicate protection still applies when saving edits to an interaction with the same interaction ID; it does not treat a deliberate new upload as the same interaction.
+
+**Outcome / Next Steps**: This behavior is not a Slice 1 acceptance blocker for testing. Add content-hash detection, result reuse, or an explicit “reprocess versus reopen” choice before production if repeated storage and compute become a concern.
+
+### 2026-07-30 — Slice 1 Accepted with Local FluidAudio Diarization
+
+**Decision**: Accept Slice 1 at 94/100 with all nine critical gates passing. Use pinned FluidAudio 0.7.12 for automatic within-recording speaker diarization on the current Swift 5.10 demo environment, aligned with MLX Whisper timestamps. Keep human review visible for low-confidence evidence and exceptional speaker mappings.
+
+**Rationale**: Prompt-only speaker reconstruction failed the ownership gate. FluidAudio separated the controlled voices locally in approximately 1.5–2.0 seconds, allowing deterministic identity mapping from spoken introductions and correct action ownership. Version 0.7.12 is the newest tested release in this work that builds with the installed Swift toolchain; the newer tested release required Swift 6.
+
+**Outcome / Next Steps**: The controlled score is 94/100, the automated suite passes 27/27, and the browser workflow passes upload through save/reopen. Slice 1 is accepted. Future production work may upgrade the diarization/model stack independently while preserving the same evidence, uncertainty, and correction contracts.
+
+### 2026-07-30 — Automatic Speaker Diarization Approved for Slice 1
+
+**Decision**: Add automatic within-recording speaker diarization to Slice 1. The system will separate detected voices, map them to the app user and contact when sufficiently grounded, and request confirmation when uncertain. No persistent biometric voice profile is required.
+
+**Rationale**: Mono transcription timestamps do not identify speakers, and prompt-only attribution failed the critical commitment-ownership gate. Automatic voice separation provides stronger evidence for action ownership while preserving an editable review step.
+
+**Outcome / Next Steps**: Implement and validate the diarization pipeline, transcript labels, and regeneration of ownership-dependent outputs. Do not insert a speaker-confirmation screen into the normal workflow. Surface editable ownership in review and request explicit speaker confirmation only when confidence is low or mappings conflict.
+
+### 2026-07-30 — Explicit Per-Conversation User Identity Defines “Me”
+
+**Decision**: Require the user to identify their name as it appears in each processed conversation. That identity defines `Me` for commitment ownership and the sender perspective for follow-up generation. If the named user cannot be grounded in the transcript, ownership must remain `Unclear` rather than being guessed.
+
+**Rationale**: The controlled fixture contains Maya Chen and Daniel Ruiz while the demo workspace previously displayed a different profile name. Without an explicit participant identity, first-person commitments and follow-up perspective cannot be assigned reliably.
+
+**Outcome**: Approved the complete Slice 1 acceptance contract. Added user name and interaction date to the capture form, automatic browser timezone context, server validation, persistence fields, evidence-bearing action schema, and identity/date-aware prompts for both local Qwen3 and explicitly selected OpenAI analysis.
+
+---
+
+### 2026-07-30 — Slice 1 Uses Weighted Quality Plus Critical Gates
+
+**Decision**: Slice 1 acceptance requires an overall score of at least 85/100 and a pass on every critical failure gate. A high aggregate score cannot compensate for wrong commitment ownership, invented dates, incorrect follow-up perspective, material contact misidentification, false completion claims, consent/provider violations, or duplicate persistence.
+
+**Rationale**: Weighted scoring captures noncritical differences in completeness, wording, and usefulness, while binary gates protect against errors that could cause incorrect action or violate user trust. The acceptance formula is `score >= 85 AND all critical gates pass`.
+
+**Outcome**: Updated the Slice 1 acceptance standard to mark the scoring model and gates approved. The user-identity contract remains the next required product decision before analysis hardening begins.
+
+---
+
 ### 2026-07-30 — Seven-Slice Epic-Aligned Delivery Map
 
 **Decision**: Organize delivery into seven ordered vertical slices that collectively cover EPIC-01 through EPIC-14. Define the full sequence and dependencies at roadmap level, then add detailed acceptance criteria and technical design only for the next implementation slice.

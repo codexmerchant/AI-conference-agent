@@ -58,7 +58,10 @@ export async function transcribeAudioLocally({
     if (!result.text?.trim()) {
       throw new ProviderError("MLX Whisper returned no transcript text", { code: "empty_local_transcript" });
     }
-    return result.text.trim();
+    return {
+      text: result.text.trim(),
+      segments: Array.isArray(result.segments) ? result.segments : []
+    };
   } catch (error) {
     if (error instanceof ProviderError) throw error;
     const detail = error.stderr?.trim() || error.message;

@@ -104,6 +104,7 @@ function resetCapture() {
   $("#processing-card").hidden = true;
   $("#results").hidden = true;
   $("#capture-form").reset();
+  setInteractionDefaults();
   $("#conference-name").value = "Human-Centered AI Summit 2026";
   $("#session-name").value = "Expo floor conversation";
   $("#file-title").textContent = "Drop a conversation recording here";
@@ -118,6 +119,13 @@ function resetCapture() {
   $("#processing-error").hidden = true;
   $("#progress-bar").style.background = "";
   selectView("workspace");
+}
+
+function setInteractionDefaults() {
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+  $("#interaction-date").value = localDate;
+  $("#interaction-timezone").value = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
 async function processConversation(event) {
@@ -150,6 +158,9 @@ async function processConversation(event) {
         body: JSON.stringify({
           conferenceName: $("#conference-name").value,
           sessionName: $("#session-name").value,
+          userName: $("#user-name").value,
+          interactionDate: $("#interaction-date").value,
+          timezone: $("#interaction-timezone").value,
           fileName: state.file.name,
           fileSize: state.file.size,
           duration: state.duration
@@ -160,6 +171,9 @@ async function processConversation(event) {
       form.append("audio", state.file, state.file.name);
       form.append("conferenceName", $("#conference-name").value);
       form.append("sessionName", $("#session-name").value);
+      form.append("userName", $("#user-name").value);
+      form.append("interactionDate", $("#interaction-date").value);
+      form.append("timezone", $("#interaction-timezone").value);
       form.append("duration", state.duration);
       form.append("consentConfirmed", String($("#consent-confirmed").checked));
       latest = await api("/api/process", { method: "POST", body: form });
@@ -191,9 +205,32 @@ function renderActions() {
   $("#action-list").innerHTML = state.current.actionItems.map((item) => `
     <div class="action-row ${item.completed ? "is-done" : ""}" data-action-id="${escapeHtml(item.id)}">
       <input type="checkbox" ${item.completed ? "checked" : ""} aria-label="Complete ${escapeHtml(item.text)}" />
-      <div><input class="action-text" value="${escapeHtml(item.text)}" aria-label="Action item" /><div class="action-meta">${escapeHtml(item.owner)} · ${escapeHtml(item.dueDate)}</div></div>
+      <div class="action-content">
+        <input class="action-text" value="${escapeHtml(item.text)}" aria-label="Action item" />
+        <div class="action-controls">
+          <label>Owner<select class="action-owner" aria-label="Action owner">
+            ${["Me", "Contact", "Mutual", "Unclear"].map((owner) => `<option ${item.owner === owner ? "selected" : ""}>${owner}</option>`).join("")}
+          </select></label>
+          <label>Due date<input class="action-date" type="date" value="${escapeHtml(item.dueDate || "")}" aria-label="Action due date" /></label>
+          <span class="action-support">${Math.round((Number(item.confidence) || 0) * 100)}% supported</span>
+        </div>
+        ${item.evidence ? `<details class="action-evidence"><summary>Source evidence</summary><p>“${escapeHtml(item.evidence)}”</p></details>` : ""}
+      </div>
       <button class="action-remove" aria-label="Remove action">×</button>
     </div>`).join("");
+}
+
+function renderReviewState() {
+  const item = state.current;
+  const confidence = Math.round((Number(item.quality?.overallConfidence) || 0) * 100);
+  const requiresReview = item.quality?.requiresReview !== false;
+  $("#analysis-confidence").textContent = `${confidence}% supported${requiresReview ? " · review" : ""}`;
+  $("#analysis-confidence").classList.toggle("needs-review", requiresReview);
+  const flags = item.reviewFlags || [];
+  $("#review-flags").hidden = flags.length === 0;
+  $("#review-flags").innerHTML = flags.length
+    ? `<strong>Review these items</strong><ul>${flags.map((flag) => `<li>${escapeHtml(flag.message)}</li>`).join("")}</ul>`
+    : "";
 }
 
 function renderInteraction() {
@@ -227,6 +264,7 @@ function renderInteraction() {
   $("#save-status").textContent = item.savedAt ? `Saved ${new Date(item.savedAt).toLocaleString()}` : "Not saved yet";
   renderTopics();
   renderActions();
+  renderReviewState();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -296,6 +334,13 @@ function escapeHtml(value = "") {
 }
 
 $("#audio-file").addEventListener("change", (event) => setFile(event.target.files[0]));
+$("#controlled-test-preset").addEventListener("click", () => {
+  $("#conference-name").value = "HealthTech Futures 2026";
+  $("#session-name").value = "ClearPath Labs conversation";
+  $("#user-name").value = "Maya Chen";
+  $("#interaction-date").value = "2026-08-02";
+  showToast("Controlled test settings applied");
+});
 $("#sample-button").addEventListener("click", () => setFile({ name: "maya-chen-conversation.m4a", size: 2_840_320, type: "audio/mp4" }, { sample: true }));
 $("#capture-form").addEventListener("submit", processConversation);
 $("#consent-confirmed").addEventListener("change", updateProcessAvailability);
@@ -310,7 +355,7 @@ $("#back-to-capture").addEventListener("click", resetCapture);
 $("#library-new").addEventListener("click", resetCapture);
 $("#add-action").addEventListener("click", () => {
   const id = `${state.current.id}_action_${Date.now().toString(36)}`;
-  state.current.actionItems.push({ id, text: "New action item", owner: "Me", dueDate: "No due date", completed: false });
+  state.current.actionItems.push({ id, text: "New action item", owner: "Me", participant: state.current.userName || "", dueDate: null, dateEvidence: null, evidence: "", confidence: 1, completed: false });
   state.dirty = true;
   renderActions();
   $("#save-status").textContent = "Unsaved changes";
@@ -328,8 +373,10 @@ $("#action-list").addEventListener("input", (event) => {
   const item = state.current.actionItems.find((action) => action.id === row.dataset.actionId);
   if (event.target.matches("[type='checkbox']")) item.completed = event.target.checked;
   if (event.target.matches(".action-text")) item.text = event.target.value;
+  if (event.target.matches(".action-owner")) item.owner = event.target.value;
+  if (event.target.matches(".action-date")) item.dueDate = event.target.value || null;
   state.dirty = true;
-  renderActions();
+  if (event.target.matches("[type='checkbox']")) renderActions();
   $("#save-status").textContent = "Unsaved changes";
 });
 $("#action-list").addEventListener("click", (event) => {
@@ -358,10 +405,10 @@ window.addEventListener("beforeunload", (event) => {
 Promise.all([
   loadLibrary(false),
   api("/api/health").then((health) => {
-    if (health.realProcessingConfigured && health.transcriptionProvider === "mlx" && health.analysisProvider === "ollama") {
+    if (health.realProcessingConfigured && health.transcriptionProvider === "mlx" && health.analysisProvider === "ollama" && health.localDiarizationReady) {
       $(".system-status").lastChild.textContent = ` Fully local · MLX Whisper + ${health.localAnalysisModel}`;
     } else if (health.realProcessingConfigured) {
-      $(".system-status").lastChild.textContent = ` Ready · ${health.transcriptionProvider} transcription + ${health.analysisProvider} analysis`;
+      $(".system-status").lastChild.textContent = ` Ready · ${health.transcriptionProvider} transcription + FluidAudio speakers + ${health.analysisProvider} analysis`;
     } else if (health.localAnalysisReady && !health.localTranscriptionReady) {
       $(".system-status").lastChild.textContent = ` Local ${health.localAnalysisModel} ready · run MLX Whisper setup`;
     } else if (health.localTranscriptionReady && !health.localAnalysisReady) {
@@ -371,3 +418,5 @@ Promise.all([
     }
   })
 ]).catch(() => showToast("The local demo service is not available"));
+
+setInteractionDefaults();
