@@ -853,5 +853,22 @@ After material project requests, decisions, implementation changes, verification
 - Created the cross-platform transcription/diarization adapters and wrappers, added CROSS-PLATFORM-SETUP.md, and ran all 27 tests successfully.
 - Initiated the run command for the demo web application locally.
 - Terminated the running local server and provided the complete guide to push/deploy changes, configure Ollama/Qwen, and run the app on the Linux VPS.
-- No project code or configuration files were changed.
+- Clarified the administrative privilege distinctions between installing Ollama (requires admin/root privileges to configure systemd and create a system user) and running Qwen models (can be executed by a standard dev user).
+- Provided Nginx reverse proxy routing strategies (subdomain-based and subpath-based) to expose the application from a unified IP/portal hosting multiple apps.
+- Troubleshooted the Ollama EOF model loading crash (typically caused by Out of Memory on low-resource VPSs), recommending service logs inspection and fallback options using smaller models like qwen2.5:1.5b.
+- Clarified that downloaded Ollama models are cached persistently on disk and are not automatically deleted upon loading crashes.
+- Explained the privilege requirements for Python and FFmpeg dependency setups, distinguishing system packages (requires sudo) from virtual environment and pip actions (strictly non-sudo).
+- Detailed the disk space size requirements for the faster-whisper python library, PyTorch dependencies, and the Whisper model weights (e.g. large-v3-turbo).
+- Outlined commands to check available disk space (`df -h`) and memory (`free -h`) on Linux.
+- Troubleshooted the pip installation disk-space crash (Errno 28), providing instructions to bypass the download cache (`--no-cache-dir`) and clean system package caches.
+- Diagnosed the tmpfs limit restriction on `/tmp` and guided the user to override the temporary directory using `TMPDIR` environment routing to utilize the root partition's free space.
+- Explained how the pip build phase uses the host system's global `/tmp` for unpacking wheels even when running inside a Python virtual environment (`venv`).
+- Troubleshooted missing Node.js dependencies, providing instructions to install Node.js v20+ using NVM to avoid outdated default distro repository packages.
+- Troubleshooted the Node.js module loading error, reminding the user to execute commands from inside the `demo/` subdirectory where the server entrypoint resides.
+- Provided network accessibility guidance, detailing firewall configuration (`ufw`) for direct port access and security considerations.
+- Outlined explicit commands to run the application in the background on Linux on port 8053 using `nohup` or `pm2`.
+- Explained PM2 installation privilege structures, providing instructions to install PM2 locally and execute via `npx` to bypass system-wide `sudo` requirements.
+- Troubleshooted Nginx subpath routing asset loading issue (absolute root-relative path resolution failure), recommending subdomain-based routing or converting HTML references to relative paths.
+- Converted absolute paths for `styles.css` and `app.js` to relative paths in `demo/public/index.html` to fully resolve the Nginx subpath rendering issue.
+- Staged and verified all local tests pass.
 
