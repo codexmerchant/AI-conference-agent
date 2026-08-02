@@ -1,0 +1,14 @@
+{
+  "fixtureVersion": "1.0",
+  "context": {"userName": "Nia Okafor", "interactionDate": "2026-11-03", "timezone": "America/Chicago", "conferenceName": "Industrial Security Summit 2026", "sessionName": "Expo floor after a zero-trust demonstration"},
+  "contact": {"name": "Victor Chen", "role": "Vice President of Information Technology", "company": "Atlas Manufacturing", "email": "victor.chen@atlasmfg.com"},
+  "requiredTopics": ["contractor onboarding", "access expiration", "identity platform", "security review", "procurement", "six plants"],
+  "commitments": [
+    {"owner": "Me", "participant": "Nia Okafor", "action": "Send the security architecture, data-flow diagram, and penetration-test summary", "dueDate": "2026-11-04", "dateEvidence": "tomorrow, November fourth", "requiredDetails": []},
+    {"owner": "Contact", "participant": "Victor Chen", "action": "Introduce Nia to the procurement manager", "dueDate": "2026-11-06", "dateEvidence": "Friday, November sixth", "requiredDetails": []},
+    {"owner": "Contact", "participant": "Victor Chen", "action": "Confirm the identity provider in his reply", "dueDate": null, "dateEvidence": "in my reply", "requiredDetails": []},
+    {"owner": "Me", "participant": "Nia Okafor", "action": "Prepare a sample contractor policy after identity-provider confirmation", "dueDate": null, "dateEvidence": "after you confirm", "requiredDetails": []}
+  ],
+  "followUp": {"sender": "Nia Okafor", "recipient": "Victor Chen", "mustMention": ["security package", "identity provider", "procurement introduction", "security review first"], "mustNotClaim": ["a commercial proposal is attached", "the pilot is approved", "procurement approved the pilot"]},
+  "criticalGates": {"correctCommitmentOwnership": true, "noInventedDates": true, "correctFollowUpPerspective": true, "correctPrimaryContact": true, "noFalseCompletionClaims": true}
+}

@@ -31,6 +31,21 @@ The fixture is fictional and contains no customer or personal data:
 
 The script deliberately includes names, roles, organizations, an email address, topics, commitments, relative timing, an absolute deadline, and a third-party introduction.
 
+## Expanded simulated fixture set
+
+Four additional fictional conversations broaden transcription and future regression coverage. Their files and conventions are indexed in [`../output/audio/README.md`](../output/audio/README.md).
+
+| Fixture | Scenario | Duration | Raw MLX WER |
+| --- | --- | ---: | ---: |
+| `simulated-climate-partnership` | Supplier-emissions pilot | 1:31 | 7.02% |
+| `simulated-edtech-research` | Adaptive-learning research study | 1:22 | 6.91% |
+| `simulated-cybersecurity-procurement` | Manufacturing security evaluation | 1:34 | 4.42% |
+| `simulated-accessibility-collaboration` | Civic-service accessibility testing | 1:19 | 4.13% |
+
+Each new fixture has an M4A, exact reference script, machine-readable expected JSON, and uncorrected MLX transcript. They vary voices, industries, identities, timezones, relative and absolute dates, conditional commitments, mutual next steps, and explicit non-commitments.
+
+MLX preserved the main scenario logic, companies, dates, commitments, and guardrails. Proper names were the clearest stress point: examples include `Aisha Patel` becoming `Ayesha Patel`, `Elena Varga` becoming `Elina Vaga`, `Nia Okafor` becoming `Naya Okafer`, and `Sophie Laurent` becoming `Sophie Laron`. These four additions have transcription evidence only and are **not** claimed as full end-to-end acceptance passes until the diarized Qwen workflow is evaluated against their expected JSON files.
+
 ## MLX Whisper evaluation
 
 The normalized comparison used lowercase alphanumeric word tokens with punctuation removed. Speaker labels and Markdown formatting were excluded.

@@ -17,6 +17,22 @@ Each entry should include:
 
 ## Log
 
+### 2026-08-02 — Per-Commit Release Notes Required for Codex Commits
+
+**Decision**: Every Codex-created commit must include exactly one release-note entry under `docs/release-notes/`, derived from the complete final staged diff and committed with the changes it describes. A reusable template defines the required content.
+
+**Rationale**: Commit handoffs need an auditable, repository-local explanation of material changes and verification that does not depend on conversation history. Collision handling, explicit quotation designation, amendment behavior, and staged-diff authority prevent ambiguous or misleading notes.
+
+**Outcome**: Added the approved workflow to the root `AGENTS.md` and created `docs/release-notes/TEMPLATE.md`. Requests to commit or commit and push invoke the rule automatically. The first invocation created a dated release entry for the fixture-suite and workflow commit.
+
+### 2026-08-01 — Controlled Simulated Fixture Suite Expanded
+
+**Decision**: Maintain a small, clearly fictional multi-scenario conversation suite in `output/audio/`, with a consistent four-file bundle per fixture: audio, reference script, machine-readable expectations, and raw MLX transcript.
+
+**Rationale**: One accepted health-tech fixture is insufficient to expose name, accent, industry vocabulary, conditional-commitment, timezone, and non-commitment failure modes. Reusable controlled fixtures make those behaviors measurable without customer data or consent risk.
+
+**Outcome**: Added climate partnership, education research, cybersecurity procurement, and accessibility collaboration scenarios alongside the original health-tech fixture. Raw MLX WER ranged from 4.13% to 7.02%. The new fixtures are transcription-verified but remain explicitly outside end-to-end acceptance until evaluated through diarization and Qwen against their expected JSON.
+
 ### 2026-07-30 — One-Click Controlled Fixture Metadata
 
 **Decision**: Add a clearly labelled testing helper above the capture metadata fields that fills the canonical controlled fixture context in one click. It does not select audio or bypass permission confirmation.

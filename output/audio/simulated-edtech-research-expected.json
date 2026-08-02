@@ -1,0 +1,14 @@
+{
+  "fixtureVersion": "1.0",
+  "context": {"userName": "Owen Brooks", "interactionDate": "2026-10-07", "timezone": "America/New_York", "conferenceName": "Learning Science Forum 2026", "sessionName": "Poster session on adaptive learning"},
+  "contact": {"name": "Elena Varga", "role": "Director of Learning Sciences", "company": "Horizon University", "email": "elena.varga@horizon.edu"},
+  "requiredTopics": ["adaptive hints", "confidence signals", "de-identified data", "consent", "student identifiers", "independent study"],
+  "commitments": [
+    {"owner": "Me", "participant": "Owen Brooks", "action": "Send a draft research protocol and data dictionary", "dueDate": "2026-10-08", "dateEvidence": "tomorrow, October eighth", "requiredDetails": []},
+    {"owner": "Contact", "participant": "Elena Varga", "action": "Send the institutional review checklist", "dueDate": "2026-10-12", "dateEvidence": "Monday, October twelfth", "requiredDetails": []},
+    {"owner": "Me", "participant": "Owen Brooks", "action": "Revise the consent and retention sections after receiving the checklist", "dueDate": null, "dateEvidence": "after I receive the checklist", "requiredDetails": []},
+    {"owner": "Mutual", "participant": null, "action": "Hold an exploratory design workshop with a district representative", "dueDate": null, "dateEvidence": "after both teams review the documents", "requiredDetails": []}
+  ],
+  "followUp": {"sender": "Owen Brooks", "recipient": "Elena Varga", "mustMention": ["research protocol", "data dictionary", "institutional review checklist", "exploratory workshop"], "mustNotClaim": ["the study is approved", "the study will launch", "the workshop is scheduled"]},
+  "criticalGates": {"correctCommitmentOwnership": true, "noInventedDates": true, "correctFollowUpPerspective": true, "correctPrimaryContact": true, "noFalseCompletionClaims": true}
+}
