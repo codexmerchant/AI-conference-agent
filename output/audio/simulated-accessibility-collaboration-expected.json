@@ -1,0 +1,14 @@
+{
+  "fixtureVersion": "1.0",
+  "context": {"userName": "Leo Martinez", "interactionDate": "2026-12-01", "timezone": "Europe/Paris", "conferenceName": "Inclusive Design Exchange 2026", "sessionName": "Networking lounge after a public-services workshop"},
+  "contact": {"name": "Sophie Laurent", "role": "Accessibility Program Director", "company": "Civic Digital Lab", "email": "sophie.laurent@civicdigitallab.org"},
+  "requiredTopics": ["appointment booking", "keyboard access", "error recovery", "screen readers", "synthetic data", "usability testing"],
+  "commitments": [
+    {"owner": "Me", "participant": "Leo Martinez", "action": "Send the synthetic-data prototype and keyboard test instructions", "dueDate": "2026-12-02", "dateEvidence": "tomorrow, Wednesday, December second", "requiredDetails": []},
+    {"owner": "Contact", "participant": "Sophie Laurent", "action": "Recruit three testers", "dueDate": "2026-12-08", "dateEvidence": "Tuesday, December eighth", "requiredDetails": []},
+    {"owner": "Me", "participant": "Leo Martinez", "action": "Offer two remote session windows and consent language after recruitment", "dueDate": null, "dateEvidence": "after recruitment", "requiredDetails": []},
+    {"owner": "Mutual", "participant": null, "action": "Choose remote session times after tester confirmation", "dueDate": null, "dateEvidence": "after tester confirmation", "requiredDetails": []}
+  ],
+  "followUp": {"sender": "Leo Martinez", "recipient": "Sophie Laurent", "mustMention": ["synthetic-data prototype", "keyboard test instructions", "three testers", "consent language"], "mustNotClaim": ["a council rollout is planned", "testers are already confirmed", "sessions are scheduled"]},
+  "criticalGates": {"correctCommitmentOwnership": true, "noInventedDates": true, "correctFollowUpPerspective": true, "correctPrimaryContact": true, "noFalseCompletionClaims": true}
+}

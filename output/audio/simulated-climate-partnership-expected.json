@@ -1,0 +1,25 @@
+{
+  "fixtureVersion": "1.0",
+  "context": {
+    "userName": "Aisha Patel",
+    "interactionDate": "2026-09-14",
+    "timezone": "America/Los_Angeles",
+    "conferenceName": "Climate Innovation Expo 2026",
+    "sessionName": "Coffee area after a supply-chain emissions panel"
+  },
+  "contact": {
+    "name": "Marcus Lee",
+    "role": "Sustainability Program Manager",
+    "company": "Meridian Foods",
+    "email": "marcus.lee@meridianfoods.com"
+  },
+  "requiredTopics": ["scope three emissions", "supplier participation", "incomplete freight data", "confidence", "Pacific Northwest pilot"],
+  "commitments": [
+    {"owner": "Me", "participant": "Aisha Patel", "action": "Send the emissions methodology and a freight example", "dueDate": "2026-09-15", "dateEvidence": "tomorrow, September fifteenth", "requiredDetails": []},
+    {"owner": "Contact", "participant": "Marcus Lee", "action": "Send the current supplier data template", "dueDate": "2026-09-18", "dateEvidence": "Friday, September eighteenth", "requiredDetails": []},
+    {"owner": "Me", "participant": "Aisha Patel", "action": "Map the supplier template to GreenLoop's intake process after reviewing it", "dueDate": null, "dateEvidence": "once I review the template", "requiredDetails": ["flag missing pilot fields"]},
+    {"owner": "Mutual", "participant": null, "action": "Schedule a 45-minute working session with the procurement analyst", "dueDate": null, "dateEvidence": "next week; choose the date after template review", "requiredDetails": []}
+  ],
+  "followUp": {"sender": "Aisha Patel", "recipient": "Marcus Lee", "mustMention": ["emissions methodology", "freight example", "supplier data template", "working session"], "mustNotClaim": ["pricing is ready", "the working session is scheduled", "the supplier template was already received"]},
+  "criticalGates": {"correctCommitmentOwnership": true, "noInventedDates": true, "correctFollowUpPerspective": true, "correctPrimaryContact": true, "noFalseCompletionClaims": true}
+}
