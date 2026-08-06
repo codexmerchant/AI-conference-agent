@@ -20,6 +20,12 @@ const mediaStore = new MediaStore(process.env.DEMO_MEDIA_DIR || path.join(root, 
 const port = Number(process.env.PORT || 4173);
 const maxAudioBytes = 25 * 1024 * 1024;
 
+const forwardPrefix = (() => {
+  const prefix = String(process.env.BASE_PATH || "").trim();
+  if (!prefix) return "";
+  return prefix.startsWith("/") ? prefix.replace(/\/+$|^\s+|\s+$/g, "") : `/${prefix.replace(/\/+$|^\s+|\s+$/g, "")}`;
+})();
+
 const types = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -86,6 +92,9 @@ export function createServer() {
   return http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+      if (forwardPrefix && url.pathname.startsWith(forwardPrefix)) {
+        url.pathname = url.pathname.slice(forwardPrefix.length) || "/";
+      }
 
       if (url.pathname === "/api/health") {
         const [ollama, mlxWhisper, diarization] = await Promise.all([getOllamaStatus(), getMlxWhisperStatus(), getFluidDiarizationStatus()]);

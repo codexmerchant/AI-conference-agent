@@ -20,6 +20,11 @@ const stages = [
   [100, "Ready for review", "Every generated field remains editable before it is saved."]
 ];
 
+function resolveApiPath(path) {
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return new URL(normalizedPath, document.baseURI).pathname;
+}
+
 async function api(path, options = {}) {
   const headers = { ...options.headers };
   if (options.body && !(options.body instanceof FormData) && !headers["content-type"]) {
@@ -29,7 +34,7 @@ async function api(path, options = {}) {
     headers.accept = "application/json";
   }
 
-  const response = await fetch(path, {
+  const response = await fetch(resolveApiPath(path), {
     ...options,
     headers
   });
