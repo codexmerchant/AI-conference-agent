@@ -6,13 +6,26 @@ import test from "node:test";
 import { createDemoAnalysis, normalizeInteraction } from "../lib/demo-data.mjs";
 import { inferOtherParticipantName, normalizeSpokenEmail, resolveSupportedDate, validateAnalysis } from "../lib/analysis-validation.mjs";
 import { attributeTranscriptSegments, diarizeAudioLocally, getFluidDiarizationStatus } from "../lib/fluid-diarization-service.mjs";
+import { getFasterWhisperStatus, transcribeAudioCrossPlatform } from "../lib/faster-whisper-service.mjs";
 import { MediaStore } from "../lib/media-store.mjs";
 import { getMlxWhisperStatus, transcribeAudioLocally } from "../lib/mlx-whisper-service.mjs";
 import { validateAudioFile, validateInteractionContext, validateProcessingPermission } from "../lib/interaction-context.mjs";
 import { analyzeTranscript, ProviderError, transcribeAudio } from "../lib/openai-service.mjs";
 import { analyzeTranscriptLocally, getOllamaStatus } from "../lib/ollama-service.mjs";
-import { chooseAnalysisProvider, chooseTranscriptionProvider } from "../lib/provider-routing.mjs";
+import { configuredProviders, defaultProviders } from "../lib/platform-providers.mjs";
+import { chooseAnalysisProvider, chooseDiarizationProvider, chooseTranscriptionProvider } from "../lib/provider-routing.mjs";
+import { diarizeAudioCrossPlatform, getPyannoteStatus } from "../lib/pyannote-diarization-service.mjs";
 import { InteractionStore } from "../lib/store.mjs";
+import { validateVisionPreview, visionPreview } from "../public/vision-data.js";
+
+test("keeps the Slices 3–6 vision workspace explicitly simulated and evidence-linked", () => {
+  assert.equal(validateVisionPreview(), true);
+  assert.equal(visionPreview.mode, "simulated_vision_preview");
+  assert.deepEqual(visionPreview.slices.map((slice) => slice.number), [3, 4, 5, 6]);
+  assert.match(visionPreview.notice, /nothing is sent, synchronized, or saved/i);
+  assert.ok(visionPreview.slices.every((slice) => slice.details.every((detail) => detail.evidence)));
+  assert.match(visionPreview.slices.find((slice) => slice.number === 5).status, /no external effects/i);
+});
 
 test("creates every artifact required by the first slice", () => {
   const result = createDemoAnalysis({ conferenceName: "Test Conference", fileName: "talk.wav" });
@@ -96,6 +109,46 @@ test("detects a ready MLX Whisper installation", async () => {
   });
   assert.equal(status.available, true);
   assert.equal(status.model, "mlx-community/whisper-large-v3-turbo");
+});
+
+test("selects explicit cross-platform defaults without changing the Mac defaults", () => {
+  assert.deepEqual(defaultProviders("darwin"), { transcription: "mlx", diarization: "fluid", analysis: "ollama" });
+  assert.deepEqual(defaultProviders("linux"), { transcription: "faster-whisper", diarization: "pyannote", analysis: "ollama" });
+  assert.deepEqual(defaultProviders("win32"), { transcription: "faster-whisper", diarization: "pyannote", analysis: "ollama" });
+  assert.deepEqual(configuredProviders({ env: { TRANSCRIPTION_PROVIDER: "openai", DIARIZATION_PROVIDER: "pyannote", ANALYSIS_PROVIDER: "openai" }, platform: "linux" }), {
+    transcription: "openai", diarization: "pyannote", analysis: "openai"
+  });
+});
+
+test("detects and invokes the cross-platform transcription adapter", async () => {
+  const status = await getFasterWhisperStatus({ python: "/test/python", execFileImpl: async (_file, args) => {
+    assert.equal(args.at(-1), "--health");
+  } });
+  assert.equal(status.available, true);
+  const source = Buffer.from("cross-platform audio");
+  const result = await transcribeAudioCrossPlatform({ bytes: source, fileName: "meeting.wav", python: "/test/python", execFileImpl: async (_file, args) => {
+    assert.deepEqual(await readFile(args[args.indexOf("--input") + 1]), source);
+    await import("node:fs/promises").then(({ writeFile }) => writeFile(args[args.indexOf("--output") + 1], JSON.stringify({
+      text: "Cross-platform transcript", segments: [{ id: 0, start: 0, end: 1, text: "Cross-platform transcript" }]
+    })));
+  } });
+  assert.equal(result.text, "Cross-platform transcript");
+});
+
+test("requires a configured token and invokes the cross-platform diarization adapter", async () => {
+  const installed = await getPyannoteStatus({ python: "/test/python", token: "test-token", execFileImpl: async () => {} });
+  assert.equal(installed.available, true);
+  const source = Buffer.from("cross-platform audio");
+  const result = await diarizeAudioCrossPlatform({ bytes: source, fileName: "meeting.wav", python: "/test/python", token: "test-token", execFileImpl: async (_file, args, options) => {
+    assert.equal(args.includes("test-token"), false);
+    assert.equal(options.env.HUGGINGFACE_TOKEN, "test-token");
+    assert.deepEqual(await readFile(args[args.indexOf("--input") + 1]), source);
+    await import("node:fs/promises").then(({ writeFile }) => writeFile(args[args.indexOf("--output") + 1], JSON.stringify({
+      processingTimeSeconds: 2.4, segments: [{ speakerId: "SPEAKER_00", start: 0, end: 1 }]
+    })));
+  } });
+  assert.equal(result.segments[0].speakerId, "SPEAKER_00");
+  await assert.rejects(() => diarizeAudioCrossPlatform({ bytes: source, fileName: "meeting.wav", token: "" }), (error) => error.code === "missing_huggingface_token");
 });
 
 test("detects a ready FluidAudio executable", async () => {
@@ -200,6 +253,10 @@ test("requires explicit provider configuration and never silently uses OpenAI", 
     () => chooseAnalysisProvider({ localReady: false, openAIConfigured: true }),
     (error) => error.code === "ollama_unavailable"
   );
+  assert.equal(chooseTranscriptionProvider({ preference: "faster-whisper", statuses: { "faster-whisper": true } }), "faster-whisper");
+  assert.equal(chooseDiarizationProvider({ preference: "fluid", statuses: { fluid: true } }), "fluid");
+  assert.equal(chooseDiarizationProvider({ preference: "pyannote", statuses: { pyannote: true } }), "pyannote");
+  assert.throws(() => chooseDiarizationProvider({ preference: "pyannote", statuses: { pyannote: false } }), (error) => error.code === "pyannote_unavailable");
 });
 
 test("requests schema-constrained local Qwen3 analysis without thinking", async () => {

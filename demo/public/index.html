@@ -23,6 +23,9 @@
             <span aria-hidden="true">◫</span> Conversations
             <span class="nav-count" id="nav-count">0</span>
           </button>
+          <button class="nav-item" data-view="vision">
+            <span aria-hidden="true">◈</span> Vision preview
+          </button>
         </nav>
 
         <div class="sidebar-note">
@@ -56,7 +59,7 @@
               <span class="step-pill">01 · Capture</span>
               <h2>Start with one meaningful conversation.</h2>
               <p>Upload a short recording. The demo will turn it into a transcript, contact, topics, summary, actions, and a follow-up draft.</p>
-              <div class="privacy-note"><span aria-hidden="true">◇</span> Uploaded audio, MLX Whisper transcription, FluidAudio speaker separation, and Qwen3 analysis stay on this Mac with the default provider settings.</div>
+              <div class="privacy-note"><span aria-hidden="true">◇</span> Uploaded audio, transcription, speaker separation, and Qwen3 analysis remain local with the default provider settings for this platform.</div>
             </div>
 
             <form class="capture-form" id="capture-form">
@@ -192,6 +195,36 @@
             <span>◎</span><h3>No saved conversations yet</h3><p>Process and save the first interaction to build your conference memory.</p>
           </div>
           <div class="conversation-list" id="conversation-list"></div>
+        </section>
+
+        <section class="vision view" id="vision-view">
+          <div class="vision-hero">
+            <div>
+              <span class="step-pill">Slices 3–6 · Product vision</span>
+              <h2>See where one reviewed conversation can lead.</h2>
+              <p>This separate workspace demonstrates the intended later-slice experience with fictional, controlled data. It is not production functionality and does not change the accepted Slice 1 workflow.</p>
+            </div>
+            <div class="vision-disclosure">
+              <span aria-hidden="true">◇</span>
+              <div><strong>Simulated product preview</strong><p id="vision-notice">Nothing is sent, synchronized, or saved.</p></div>
+            </div>
+          </div>
+
+          <div class="vision-toolbar" aria-label="Filter vision preview by slice">
+            <button class="vision-filter is-active" data-vision-filter="all">Complete conference view</button>
+            <button class="vision-filter" data-vision-filter="slice-3">Slice 3</button>
+            <button class="vision-filter" data-vision-filter="slice-4">Slice 4</button>
+            <button class="vision-filter" data-vision-filter="slice-5">Slice 5</button>
+            <button class="vision-filter" data-vision-filter="slice-6">Slice 6</button>
+          </div>
+
+          <div class="vision-context">
+            <div><span class="eyebrow">Fictional conference</span><strong id="vision-conference">HealthTech Futures 2026</strong></div>
+            <div><span class="eyebrow">Evidence model</span><strong>Every displayed claim retains a source reference</strong></div>
+            <div><span class="eyebrow">Safety boundary</span><strong>Review before any external effect</strong></div>
+          </div>
+
+          <div class="vision-grid" id="vision-grid"></div>
         </section>
       </main>
     </div>

@@ -1,11 +1,15 @@
 import { ProviderError } from "./openai-service.mjs";
 
-export function chooseTranscriptionProvider({ preference = "mlx", localReady, openAIConfigured }) {
-  if (preference === "mlx") {
-    if (localReady) return "mlx";
-    throw new ProviderError("Local MLX Whisper is not ready. Run ./scripts/setup-local-transcription.sh from the demo directory.", {
+export function chooseTranscriptionProvider({ preference = "mlx", statuses = {}, localReady, openAIConfigured }) {
+  const ready = { ...statuses, mlx: statuses.mlx ?? localReady };
+  if (preference === "mlx" || preference === "faster-whisper") {
+    if (ready[preference]) return preference;
+    const isMlx = preference === "mlx";
+    throw new ProviderError(isMlx
+      ? "Local MLX Whisper is not ready. Run ./scripts/setup-local-transcription.sh from the demo directory."
+      : "Local faster-whisper is not ready. Run the Linux or Windows cross-platform AI setup from the demo directory.", {
       status: 503,
-      code: "mlx_whisper_unavailable",
+      code: isMlx ? "mlx_whisper_unavailable" : "faster_whisper_unavailable",
       retryable: false
     });
   }
@@ -20,6 +24,25 @@ export function chooseTranscriptionProvider({ preference = "mlx", localReady, op
   throw new ProviderError(`Unsupported transcription provider: ${preference}`, {
     status: 503,
     code: "invalid_transcription_provider",
+    retryable: false
+  });
+}
+
+export function chooseDiarizationProvider({ preference = "fluid", statuses = {} }) {
+  if (preference === "fluid" || preference === "pyannote") {
+    if (statuses[preference]) return preference;
+    const isFluid = preference === "fluid";
+    throw new ProviderError(isFluid
+      ? "FluidAudio diarization is not ready. Run ./scripts/setup-local-diarization.sh from the demo directory."
+      : "pyannote diarization is not ready. Run the Linux or Windows cross-platform AI setup and configure HUGGINGFACE_TOKEN.", {
+      status: 503,
+      code: isFluid ? "fluid_diarization_unavailable" : "pyannote_unavailable",
+      retryable: false
+    });
+  }
+  throw new ProviderError(`Unsupported diarization provider: ${preference}`, {
+    status: 503,
+    code: "invalid_diarization_provider",
     retryable: false
   });
 }

@@ -1,3 +1,5 @@
+import { validateVisionPreview, visionPreview } from "./vision-data.js";
+
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -54,9 +56,40 @@ function showToast(message) {
 function selectView(name) {
   $$(".view").forEach((view) => view.classList.toggle("is-visible", view.id === `${name}-view`));
   $$(".nav-item").forEach((item) => item.classList.toggle("is-active", item.dataset.view === name));
-  $("#view-eyebrow").textContent = name === "library" ? "Conference memory" : "Conference workspace";
-  $("#view-title").textContent = name === "library" ? "Return to any conversation" : "Turn a conversation into momentum";
+  const viewCopy = {
+    workspace: ["Conference workspace", "Turn a conversation into momentum"],
+    library: ["Conference memory", "Return to any conversation"],
+    vision: ["Product vision", "Explore the conference intelligence roadmap"]
+  };
+  $("#view-eyebrow").textContent = viewCopy[name]?.[0] || viewCopy.workspace[0];
+  $("#view-title").textContent = viewCopy[name]?.[1] || viewCopy.workspace[1];
   if (name === "library") loadLibrary();
+}
+
+function renderVisionPreview(filter = "all") {
+  validateVisionPreview(visionPreview);
+  $("#vision-conference").textContent = visionPreview.conference;
+  $("#vision-notice").textContent = visionPreview.notice;
+  const slices = filter === "all" ? visionPreview.slices : visionPreview.slices.filter((slice) => slice.id === filter);
+  $("#vision-grid").innerHTML = slices.map((slice) => `
+    <article class="vision-card vision-${escapeHtml(slice.tone)}" data-slice="${escapeHtml(slice.id)}">
+      <div class="vision-card-heading">
+        <div><span class="vision-slice-number">${slice.number}</span><span class="eyebrow">${escapeHtml(slice.label)}</span></div>
+        <span class="vision-status">${escapeHtml(slice.status)}</span>
+      </div>
+      <h3>${escapeHtml(slice.title)}</h3>
+      <p class="vision-summary">${escapeHtml(slice.summary)}</p>
+      <div class="vision-metric"><strong>${escapeHtml(slice.metric)}</strong><span>${escapeHtml(slice.metricLabel)}</span></div>
+      <div class="vision-detail-list">
+        ${slice.details.map((detail) => `
+          <div class="vision-detail">
+            <span>${escapeHtml(detail.label)}</span>
+            <strong>${escapeHtml(detail.value)}</strong>
+            <small>↳ ${escapeHtml(detail.evidence)}</small>
+          </div>`).join("")}
+      </div>
+      ${slice.number === 5 ? '<button class="button secondary vision-preview-action">Review approval queue</button>' : ""}
+    </article>`).join("");
 }
 
 function updateProcessAvailability() {
@@ -366,6 +399,14 @@ $("#copy-follow-up").addEventListener("click", async () => {
 });
 
 $$(".nav-item").forEach((button) => button.addEventListener("click", () => selectView(button.dataset.view)));
+$$(".vision-filter").forEach((button) => button.addEventListener("click", () => {
+  $$(".vision-filter").forEach((filter) => filter.classList.toggle("is-active", filter === button));
+  renderVisionPreview(button.dataset.visionFilter);
+}));
+$("#vision-grid").addEventListener("click", (event) => {
+  if (!event.target.closest(".vision-preview-action")) return;
+  showToast("Preview only — no email, calendar event, or task was created");
+});
 $$(["#summary", "#follow-up", "#transcript", "#contact-name", "#contact-role", "#contact-company", "#contact-email"].join(",")).forEach((field) => field.addEventListener("input", collectEdits));
 $("#action-list").addEventListener("input", (event) => {
   const row = event.target.closest(".action-row");
@@ -405,18 +446,18 @@ window.addEventListener("beforeunload", (event) => {
 Promise.all([
   loadLibrary(false),
   api("/api/health").then((health) => {
-    if (health.realProcessingConfigured && health.transcriptionProvider === "mlx" && health.analysisProvider === "ollama" && health.localDiarizationReady) {
-      $(".system-status").lastChild.textContent = ` Fully local · MLX Whisper + ${health.localAnalysisModel}`;
-    } else if (health.realProcessingConfigured) {
-      $(".system-status").lastChild.textContent = ` Ready · ${health.transcriptionProvider} transcription + FluidAudio speakers + ${health.analysisProvider} analysis`;
-    } else if (health.localAnalysisReady && !health.localTranscriptionReady) {
-      $(".system-status").lastChild.textContent = ` Local ${health.localAnalysisModel} ready · run MLX Whisper setup`;
-    } else if (health.localTranscriptionReady && !health.localAnalysisReady) {
-      $(".system-status").lastChild.textContent = " Local MLX Whisper ready · start Ollama/Qwen3";
+    if (health.realProcessingConfigured) {
+      $(".system-status").lastChild.textContent = ` ${health.platformLabel} ready · ${health.transcriptionProvider} + ${health.diarizationProvider} + ${health.analysisProvider}`;
     } else {
-      $(".system-status").lastChild.textContent = " Sample ready · processing setup needed";
+      const missing = [
+        !health.localTranscriptionReady && `${health.transcriptionProvider} transcription`,
+        !health.localDiarizationReady && `${health.diarizationProvider} diarization`,
+        !health.localAnalysisReady && `${health.analysisProvider} analysis`
+      ].filter(Boolean).join(", ");
+      $(".system-status").lastChild.textContent = ` ${health.platformLabel} sample ready · configure ${missing || "processing providers"}`;
     }
   })
 ]).catch(() => showToast("The local demo service is not available"));
 
 setInteractionDefaults();
+renderVisionPreview();

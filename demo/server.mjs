@@ -5,12 +5,15 @@ import { fileURLToPath } from "node:url";
 import { createDemoAnalysis, createRealAnalysis, normalizeInteraction } from "./lib/demo-data.mjs";
 import { inferOtherParticipantName, validateAnalysis } from "./lib/analysis-validation.mjs";
 import { attributeTranscriptSegments, diarizeAudioLocally, getFluidDiarizationStatus } from "./lib/fluid-diarization-service.mjs";
+import { getFasterWhisperStatus, transcribeAudioCrossPlatform } from "./lib/faster-whisper-service.mjs";
 import { MediaStore } from "./lib/media-store.mjs";
 import { getMlxWhisperStatus, transcribeAudioLocally } from "./lib/mlx-whisper-service.mjs";
 import { validateAudioFile, validateInteractionContext, validateProcessingPermission } from "./lib/interaction-context.mjs";
 import { analyzeTranscript, ProviderError, transcribeAudio } from "./lib/openai-service.mjs";
 import { analyzeTranscriptLocally, getOllamaStatus } from "./lib/ollama-service.mjs";
-import { chooseAnalysisProvider, chooseTranscriptionProvider } from "./lib/provider-routing.mjs";
+import { configuredProviders, platformLabel } from "./lib/platform-providers.mjs";
+import { chooseAnalysisProvider, chooseDiarizationProvider, chooseTranscriptionProvider } from "./lib/provider-routing.mjs";
+import { diarizeAudioCrossPlatform, getPyannoteStatus } from "./lib/pyannote-diarization-service.mjs";
 import { InteractionStore } from "./lib/store.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -88,22 +91,38 @@ export function createServer() {
       const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
 
       if (url.pathname === "/api/health") {
-        const [ollama, mlxWhisper, diarization] = await Promise.all([getOllamaStatus(), getMlxWhisperStatus(), getFluidDiarizationStatus()]);
-        const transcriptionPreference = process.env.TRANSCRIPTION_PROVIDER || "mlx";
-        const analysisPreference = process.env.ANALYSIS_PROVIDER || "ollama";
+        const [ollama, mlxWhisper, fasterWhisper, fluid, pyannote] = await Promise.all([
+          getOllamaStatus(), getMlxWhisperStatus(), getFasterWhisperStatus(), getFluidDiarizationStatus(), getPyannoteStatus()
+        ]);
+        const providers = configuredProviders();
         const openAIConfigured = Boolean(process.env.OPENAI_API_KEY);
-        const transcriptionReady = transcriptionPreference === "mlx" ? mlxWhisper.available : openAIConfigured;
-        const analysisReady = analysisPreference === "ollama" ? ollama.available && ollama.modelReady : openAIConfigured;
+        const transcriptionReady = providers.transcription === "mlx" ? mlxWhisper.available
+          : providers.transcription === "faster-whisper" ? fasterWhisper.available : openAIConfigured;
+        const diarizationReady = providers.diarization === "fluid" ? fluid.available : pyannote.available;
+        const analysisReady = providers.analysis === "ollama" ? ollama.available && ollama.modelReady : openAIConfigured;
         return json(res, 200, {
           status: "ok",
-          realProcessingConfigured: transcriptionReady && analysisReady && diarization.available,
+          platform: process.platform,
+          platformLabel: platformLabel(),
+          realProcessingConfigured: transcriptionReady && analysisReady && diarizationReady,
           openAIConfigured,
-          transcriptionProvider: transcriptionPreference,
-          analysisProvider: analysisPreference,
-          localTranscriptionReady: mlxWhisper.available,
+          transcriptionProvider: providers.transcription,
+          diarizationProvider: providers.diarization,
+          analysisProvider: providers.analysis,
+          localTranscriptionReady: transcriptionReady,
           localAnalysisReady: ollama.available && ollama.modelReady,
-          localDiarizationReady: diarization.available,
-          transcriptionModel: transcriptionPreference === "mlx" ? mlxWhisper.model : process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-transcribe",
+          localDiarizationReady: diarizationReady,
+          providerReadiness: {
+            mlx: mlxWhisper.available,
+            fasterWhisper: fasterWhisper.available,
+            fluid: fluid.available,
+            pyannote: pyannote.available,
+            pyannoteInstalled: pyannote.installed,
+            huggingFaceTokenConfigured: pyannote.tokenConfigured
+          },
+          transcriptionModel: providers.transcription === "mlx" ? mlxWhisper.model
+            : providers.transcription === "faster-whisper" ? fasterWhisper.model : process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-transcribe",
+          diarizationModel: providers.diarization === "fluid" ? fluid.version : pyannote.model,
           cloudAnalysisModel: process.env.OPENAI_TEXT_MODEL || "gpt-5.6-terra",
           localAnalysisModel: ollama.model
         });
@@ -116,22 +135,22 @@ export function createServer() {
 
       if (url.pathname === "/api/process" && req.method === "POST") {
         try {
-          const [ollama, mlxWhisper, diarization] = await Promise.all([getOllamaStatus(), getMlxWhisperStatus(), getFluidDiarizationStatus()]);
-          if (!diarization.available) {
-            throw new ProviderError("FluidAudio diarization is not ready. Run the local diarization setup first.", {
-              status: 503,
-              code: "fluid_diarization_unavailable",
-              retryable: false
-            });
-          }
+          const [ollama, mlxWhisper, fasterWhisper, fluid, pyannote] = await Promise.all([
+            getOllamaStatus(), getMlxWhisperStatus(), getFasterWhisperStatus(), getFluidDiarizationStatus(), getPyannoteStatus()
+          ]);
+          const preferences = configuredProviders();
           const openAIConfigured = Boolean(process.env.OPENAI_API_KEY);
           const transcriptionProvider = chooseTranscriptionProvider({
-            preference: process.env.TRANSCRIPTION_PROVIDER || "mlx",
-            localReady: mlxWhisper.available,
+            preference: preferences.transcription,
+            statuses: { mlx: mlxWhisper.available, "faster-whisper": fasterWhisper.available },
             openAIConfigured
           });
+          const diarizationProvider = chooseDiarizationProvider({
+            preference: preferences.diarization,
+            statuses: { fluid: fluid.available, pyannote: pyannote.available }
+          });
           const analysisProvider = chooseAnalysisProvider({
-            preference: process.env.ANALYSIS_PROVIDER || "ollama",
+            preference: preferences.analysis,
             localReady: ollama.available && ollama.modelReady,
             openAIConfigured
           });
@@ -160,6 +179,8 @@ export function createServer() {
                 fileName: audio.name,
                 model: mlxWhisper.model
               })
+              : transcriptionProvider === "faster-whisper"
+                ? transcribeAudioCrossPlatform({ bytes: audioBytes, fileName: audio.name, model: fasterWhisper.model })
               : transcribeAudio({
                 bytes: audioBytes,
                 fileName: audio.name,
@@ -167,7 +188,9 @@ export function createServer() {
                 apiKey: process.env.OPENAI_API_KEY,
                 model: process.env.OPENAI_TRANSCRIBE_MODEL || "gpt-transcribe"
               }),
-            diarizeAudioLocally({ bytes: audioBytes, fileName: audio.name })
+            diarizationProvider === "fluid"
+              ? diarizeAudioLocally({ bytes: audioBytes, fileName: audio.name })
+              : diarizeAudioCrossPlatform({ bytes: audioBytes, fileName: audio.name, model: pyannote.model })
           ]);
           const transcript = typeof transcriptionResult === "string" ? transcriptionResult : transcriptionResult.text;
           const segments = typeof transcriptionResult === "string"
@@ -214,9 +237,12 @@ export function createServer() {
             analysis,
             media,
             providers: {
-              transcription: transcriptionProvider === "mlx" ? `Local MLX Whisper (${mlxWhisper.model})` : "OpenAI file transcription",
+              transcription: transcriptionProvider === "mlx" ? `Local MLX Whisper (${mlxWhisper.model})`
+                : transcriptionProvider === "faster-whisper" ? `Local faster-whisper (${fasterWhisper.model})` : "OpenAI file transcription",
               analysis: analysisProvider === "ollama" ? `Local ${ollama.model} structured analysis` : "OpenAI structured transcript analysis",
-              speakerAttribution: `Local FluidAudio 0.7.12 diarization (${diarizationResult.processingTimeSeconds?.toFixed(1) || "—"}s)`
+              speakerAttribution: diarizationProvider === "fluid"
+                ? `Local FluidAudio 0.7.12 diarization (${diarizationResult.processingTimeSeconds?.toFixed(1) || "—"}s)`
+                : `Local pyannote diarization (${diarizationResult.processingTimeSeconds?.toFixed(1) || "—"}s)`
             }
           }));
         } catch (error) {
@@ -289,6 +315,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   });
   server.listen(port, () => {
     console.log(`AI Conference Agent demo running at http://localhost:${port}`);
-    console.log("Default real-processing pipeline: Local MLX Whisper transcription · Local Qwen3 analysis.");
+    const providers = configuredProviders();
+    console.log(`Default real-processing pipeline for ${platformLabel()}: ${providers.transcription} transcription · ${providers.diarization} diarization · ${providers.analysis} analysis.`);
   });
 }

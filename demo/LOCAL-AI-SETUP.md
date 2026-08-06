@@ -1,12 +1,26 @@
-# Free Local AI Setup — macOS
+# Free Local AI Setup — macOS, Linux, and Windows
 
 This is the running setup guide for processing Slice 1 recordings locally, without an OpenAI API key or per-recording API charges.
 
-The intended local pipeline is:
+The platform-specific local pipelines are:
 
 `Audio → MLX Whisper transcription + FluidAudio speaker diarization → Qwen3 analysis → Review and save`
 
+on Apple-silicon macOS, and:
+
+`Audio → faster-whisper transcription + pyannote speaker diarization → Qwen3 analysis → Review and save`
+
+on Linux and Windows.
+
 Local MLX Whisper transcription and Qwen3 analysis have been verified on an Apple M3 Mac with 18 GB of unified memory. The default workflow does not silently fall back to a paid provider.
+
+## Linux and Windows audio setup
+
+Install Python 3.10 or newer and FFmpeg first. On Linux, run `sh scripts/setup-cross-platform-ai.sh`. On Windows, run `.\scripts\setup-cross-platform-ai.ps1` from PowerShell. These scripts create `.venv-cross-platform` and install the pinned faster-whisper and pyannote dependencies.
+
+The community pyannote model requires accepting the `pyannote/speaker-diarization-community-1` agreement and setting a scoped `HUGGINGFACE_TOKEN` in the server environment. The token must never be committed. The adapter disables pyannote metrics by default. Models download on first use, so a clean-machine acceptance run must include that initial download or a documented preloaded cache.
+
+Linux and Windows integration is implemented but remains unaccepted until the complete controlled fixture and critical-gate suite passes on each operating system. The existing Mac acceptance does not establish cross-platform acceptance.
 
 ## 1. Install MLX Whisper
 
@@ -114,6 +128,8 @@ The response should include `qwen3:latest`. Ollama must be running whenever the 
 - [x] MLX Whisper connected to the Slice 1 demo
 - [x] FluidAudio approved for automatic within-recording speaker diarization
 - [x] Complete local recording workflow browser-tested with a synthetic WAV fixture
+- [ ] Complete Linux controlled-fixture and critical-gate run
+- [ ] Complete Windows controlled-fixture and critical-gate run
 
 ## Local transcription provider comparison
 
@@ -147,7 +163,7 @@ The demo checks `http://127.0.0.1:11434/api/tags` for the configured model. When
 - temperature `0`
 - the Slice 1 JSON schema supplied through Ollama's `format` field
 
-The demo health indicator reports **Fully local · MLX Whisper + qwen3** when both providers are available. If either is missing, it identifies the required local setup step. OpenAI is never selected automatically.
+The demo health indicator reports the detected platform and selected transcription, diarization, and analysis providers. If one is missing, it identifies that provider rather than displaying a Mac-only setup instruction. OpenAI is never selected automatically.
 
 Optional configuration values are listed in `.env.example`. The defaults work with a standard local Ollama installation and the `qwen3` model.
 
