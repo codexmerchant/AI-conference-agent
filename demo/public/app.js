@@ -22,12 +22,26 @@ const stages = [
 
 async function api(path, options = {}) {
   const headers = { ...options.headers };
-  if (options.body && !(options.body instanceof FormData) && !headers["content-type"]) headers["content-type"] = "application/json";
+  if (options.body && !(options.body instanceof FormData) && !headers["content-type"]) {
+    headers["content-type"] = "application/json";
+  }
+  if (!headers.accept) {
+    headers.accept = "application/json";
+  }
+
   const response = await fetch(path, {
     ...options,
     headers
   });
-  const payload = await response.json();
+
+  let payload;
+  const text = await response.text();
+  try {
+    payload = text ? JSON.parse(text) : {};
+  } catch {
+    payload = { error: text || response.statusText || "Unexpected server response" };
+  }
+
   if (!response.ok) {
     const error = new Error(payload.error || "Something went wrong");
     Object.assign(error, payload);
